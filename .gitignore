@@ -1,0 +1,88 @@
+# ========================================
+# NODE MODULES & DEPENDENCIES
+# ========================================
+node_modules/
+**/node_modules/
+hedera-setup/node_modules/
+frontend/node_modules/
+
+# Environment variables (CRITICAL - Contains private keys!)
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.mainnet
+**/.env.testnet
+**/.env.production
+
+# Hedera setup outputs (CRITICAL - Contains account keys and IDs!)
+hedera-setup/output/
+hedera-setup/dist/
+hedera-setup/build/
+
+# Hedera sensitive JSON files
+hedera-setup/accounts.json
+hedera-setup/topics.json
+hedera-setup/collections.json
+hedera-setup/tokens.json
+hedera-setup/nfts.json
+hedera-setup/config.json
+hedera-setup/frontend.env
+
+# Backup files
+*.bak
+*.backup
+*_backup
+backups/
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+private_keys/
+
+# Build outputs
+dist/
+build/
+*.js.map
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Optional caches
+.npm
+.eslintcache
+
+# IPFS local data
+.ipfs/
+ipfs_data/
