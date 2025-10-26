@@ -1,8 +1,11 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+
+import { Geist, Geist_Mono } from 'next/font/google';
+
 import { AppProvider } from '@/lib/providers';
+import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
+import { WalletProvider } from '@/hooks/use-wallet';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,13 +29,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AppProvider>
-          {children}
-          <Toaster />
-        </AppProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <WalletProvider network="testnet">
+          <AppProvider>
+            {children}
+            <Toaster />
+          </AppProvider>
+        </WalletProvider>
       </body>
     </html>
   );

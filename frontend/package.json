@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.75.0",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-slot": "^1.2.3",
     "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-query": "^5.85.6",
     "axios": "^1.10.0",
@@ -25,7 +27,9 @@
     "clsx": "^2.1.1",
     "cookies-next": "^6.1.0",
     "dompurify": "^3.2.6",
+    "ethers": "^6.15.0",
     "formik": "^2.4.6",
+    "hashconnect": "^0.1.7",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.544.0",
     "moment": "^2.30.1",
