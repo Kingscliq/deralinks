@@ -12,7 +12,7 @@ export interface HederaConfig {
 export interface HederaTransactionResult {
   transactionId: string;
   status: string;
-  receipt?: any;
+  receipt?: unknown;
 }
 
 /**
@@ -158,7 +158,7 @@ export class HederaClient {
   /**
    * Execute smart contract function
    */
-  async callContract(contractId: string, functionName: string, params: any[]) {
+  async callContract(contractId: string, functionName: string, params: unknown[]) {
     try {
       console.log(`Calling contract ${contractId}.${functionName}`, params);
 

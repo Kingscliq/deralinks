@@ -789,7 +789,7 @@
   dependencies:
     long "5.3.1"
 
-"@hashgraph/sdk@^2.14.2", "@hashgraph/sdk@^2.75.0":
+"@hashgraph/sdk@^2.14.2":
   version "2.75.0"
   resolved "https://registry.yarnpkg.com/@hashgraph/sdk/-/sdk-2.75.0.tgz#a5a8f2b0755574f30dd8ecf62ee5b2f67fa3a1d1"
   integrity sha512-Nkv57So2RbNlKxog1nsyqHgorgrStr3yzx0ZWse4R6yg1TztafiqA2+9m3YlmH3eNMr7vmghgtGqPkRflfVhZg==

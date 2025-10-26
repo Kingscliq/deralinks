@@ -26,8 +26,7 @@ export function WalletConnectionEnhanced({
   onConnect,
   onDisconnect,
 }: WalletConnectionEnhancedProps) {
-  const { status, account, walletType, error, connect, disconnect, provider, signer } =
-    useMultiWallet();
+  const { status, account, walletType, error, disconnect } = useMultiWallet();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nftHoldings, setNftHoldings] = useState<NFTHolding[]>([]);
   const [isLoadingNFTs, setIsLoadingNFTs] = useState(false);
@@ -42,6 +41,7 @@ export function WalletConnectionEnhanced({
       loadNFTHoldings();
       onConnect?.(account.address);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, account]);
 
   const loadNFTHoldings = async () => {

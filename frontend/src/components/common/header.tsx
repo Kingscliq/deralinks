@@ -21,16 +21,20 @@ import { useState } from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 
 export function Header() {
-  const { isConnected, accountId, disconnect } = useWallet();
+  const { isConnected, account, accountId, disconnect } = useWallet();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const isWalletConnected = isConnected;
-  const walletAddress = accountId || '';
+  const walletAddress = account || accountId || '';
 
   const formatAddress = (address: string): string => {
     if (!address) return '';
     // For Hedera account IDs (e.g., 0.0.123456)
     return address;
+  };
+
+  const handleDisconnect = async () => {
+    await disconnect();
   };
 
   return (
@@ -218,16 +222,11 @@ export function Header() {
                         <Box className="font-mono text-sm text-sidebar-foreground">
                           {formatAddress(walletAddress)}
                         </Box>
-                        {account?.balance && (
-                          <Box className="text-xs text-muted-foreground mt-2">
-                            Balance: {account.balance} HBAR
-                          </Box>
-                        )}
                       </Box>
                       <Button
                         variant="outline"
                         onClick={() => {
-                          disconnect();
+                          handleDisconnect();
                           setIsMobileSidebarOpen(false);
                         }}
                         className="w-full flex items-center gap-2 border-sidebar-border hover:border-red-500/50 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"

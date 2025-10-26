@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <WalletProvider network="testnet">
+        <WalletProvider>
           <AppProvider>
             {children}
             <Toaster />

@@ -1,35 +1,15 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-
-// Dynamically import HashConnect only on client side
-let HashConnect: typeof import('hashconnect').HashConnect | null = null;
-
-if (typeof window !== 'undefined') {
-  try {
-    // Try to import hashconnect if available
-    import('hashconnect')
-      .then(module => {
-        HashConnect = module.HashConnect;
-      })
-      .catch(() => {
-        console.warn('HashConnect not available - please install hashconnect@0.1.7');
-      });
-  } catch (err) {
-    console.warn('HashConnect not available:', err);
-  }
-}
+import {
+  connectHashPackWallet,
+  disconnectHashPackWallet,
+  type SaveData,
+} from '@/lib/hedera/hashconnect';
+import type { HashConnect } from 'hashconnect';
 
 // Wallet types
 export type WalletType = 'hashpack' | 'metamask' | null;
-
-export interface SaveData {
-  topic: string;
-  pairingString: string;
-  privateKey: string;
-  pairedWalletData: unknown | null;
-  pairedAccounts: string[];
-}
 
 export interface WalletContextType {
   walletType: WalletType;
@@ -37,7 +17,7 @@ export interface WalletContextType {
   account: string | null;
   isConnecting: boolean;
   error: string | null;
-  hashconnect: unknown | null;
+  hashconnect: HashConnect | null;
   saveData: SaveData | null;
   connect: (type: WalletType) => Promise<void>;
   disconnect: () => Promise<void>;
@@ -60,12 +40,6 @@ export const useWallet = () => {
   return context;
 };
 
-const appMetadata = {
-  name: 'Deralinks - Real Estate Tokenization',
-  description: 'Tokenize and trade real-world assets on Hedera',
-  icon: 'https://raw.githubusercontent.com/ed-marquez/hedera-dapp-days/testing/src/assets/hederaLogo.png',
-};
-
 export const WalletProvider: React.FC<WalletProviderProps> = ({
   children,
   network = 'testnet',
@@ -75,108 +49,111 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hashconnect, setHashconnect] = useState<unknown | null>(null);
+  const [hashconnect, setHashconnect] = useState<HashConnect | null>(null);
   const [saveData, setSaveData] = useState<SaveData | null>(null);
   const [pairingString, setPairingString] = useState<string | null>(null);
 
+  console.log('hashconnect::::', hashconnect);
+  console.log('saveData::::', saveData);
+  console.log('accountId::::', saveData);
+
   // Connect to HashPack wallet using HashConnect
   const connectHashPack = useCallback(async () => {
-    try {
-      setIsConnecting(true);
-      setError(null);
+    setIsConnecting(true);
+    setError(null);
 
-      // Check if already connected
-      if (accountId && walletType === 'hashpack') {
-        console.log(`✅ Account ${accountId} already connected`);
-        setIsConnecting(false);
+    // Check if already connected
+    if (accountId && walletType === 'hashpack') {
+      console.log(`✅ Account ${accountId} already connected`);
+      setIsConnecting(false);
+      return;
+    }
+
+    // Clear any old connection data to prevent decryption errors
+    localStorage.removeItem('hashconnect_accountId');
+    localStorage.removeItem('hashconnect_saveData');
+    console.log('🧹 Cleared old connection data');
+
+    // Suppress ALL console errors during HashConnect initialization
+    // to prevent decryption errors from showing
+    const originalConsoleError = console.error;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    console.error = (...args: any[]) => {
+      const msg = String(args[0] || '');
+      // Suppress these specific HashConnect errors
+      if (
+        msg.includes('Invalid encrypted text') ||
+        msg.includes('Decryption halted') ||
+        msg.includes('SimpleCrypto')
+      ) {
         return;
       }
+      originalConsoleError.apply(console, args);
+    };
 
-      if (!HashConnect) {
-        throw new Error('HashConnect library not loaded. Please install hashconnect@0.1.7');
-      }
+    try {
+      const wData = await connectHashPackWallet(network);
 
-      console.log(`\n=======================================`);
-      console.log('- Connecting wallet...');
-
-      // Create save data structure
-      const data: SaveData = {
-        topic: '',
-        pairingString: '',
-        privateKey: '',
-        pairedWalletData: null,
-        pairedAccounts: [],
-      };
-
-      // Create HashConnect instance
-      const hc = new HashConnect();
-
-      // First init and store the pairing private key
-      const initData = await hc.init(appMetadata);
-      data.privateKey = initData.privKey;
-      console.log(`- Private key for pairing: ${data.privateKey}`);
-
-      // Then connect, storing the new topic
-      const state = await hc.connect();
-      data.topic = state.topic;
-      console.log(`- Pairing topic is: ${data.topic}`);
-
-      // Generate a pairing string
-      data.pairingString = hc.generatePairingString(state, network, false);
-      console.log(`- Pairing string generated`);
+      console.log('✅ Wallet connection initiated');
+      console.log('📦 wData[0] (hashconnect):', typeof wData[0]);
+      console.log('📦 wData[1] (saveData):', wData[1]);
 
       // Store the instance and data immediately
-      setHashconnect(hc);
-      setSaveData(data);
-      setPairingString(data.pairingString);
+      setHashconnect(wData[0]);
+      setSaveData(wData[1]);
+      setPairingString(wData[1].pairingString);
 
-      // Set up pairing event listener BEFORE connecting to local wallet
+      console.log('🔌 Setting up pairing event listener...');
+
+      // Set up pairing event listener - exactly like reference implementation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (hc as any).pairingEvent.once((pairingData: any) => {
-        console.log('🎉 Pairing event received:', pairingData);
+      (wData[0] as any).pairingEvent.once((pairingData: any) => {
+        console.log('🎉🎉🎉 PAIRING EVENT FIRED! 🎉🎉🎉');
+        console.log('pairingData:', pairingData);
 
-        pairingData.accountIds.forEach((id: string) => {
-          setAccountId(id);
-          setAccount(id);
-          setWalletType('hashpack');
-          console.log(`- Paired account id: ${id}`);
+        if (pairingData && pairingData.accountIds) {
+          console.log('accountIds:', pairingData.accountIds);
 
-          // Update save data
-          const updatedData = {
-            ...data,
-            pairedWalletData: pairingData,
-            pairedAccounts: pairingData.accountIds,
-          };
-          setSaveData(updatedData);
+          pairingData.accountIds.forEach((id: string) => {
+            console.log(`✅ Paired account id: ${id}`);
 
-          // Store in localStorage
-          localStorage.setItem('wallet_type', 'hashpack');
-          localStorage.setItem('hashconnect_accountId', id);
-          localStorage.setItem('hashconnect_saveData', JSON.stringify(updatedData));
+            setAccountId(id);
+            setAccount(id);
+            setWalletType('hashpack');
 
-          console.log(`✅ Account ${id} connected ⚡ ✅`);
+            // Update save data with pairing info
+            const updatedData = {
+              ...wData[1],
+              pairedWalletData: pairingData,
+              pairedAccounts: pairingData.accountIds,
+            };
+            setSaveData(updatedData);
+
+            // Store in localStorage to persist connection
+            localStorage.setItem('wallet_type', 'hashpack');
+            localStorage.setItem('hashconnect_accountId', id);
+            localStorage.setItem('hashconnect_saveData', JSON.stringify(updatedData));
+
+            console.log(`✅ Account ${id} connected ⚡ ✅`);
+            setIsConnecting(false);
+            setError(null);
+          });
+        } else {
+          console.error('❌ No accountIds in pairingData');
           setIsConnecting(false);
-          setError(null);
-        });
+        }
       });
 
-      // Find any supported local wallets
-      hc.findLocalWallets();
-      hc.connectToLocalWallet(data.pairingString);
-
-      console.log('- Waiting for HashPack connection...');
-      console.log('- Please approve the connection in HashPack');
+      console.log('✅ Event listener attached, waiting for user to approve in HashPack...');
     } catch (err) {
-      const error = err as Error;
-      let errorMessage = 'Failed to connect to HashPack';
-
-      if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      setError(errorMessage);
-      console.error('❌ HashPack connection error:', error);
+      console.error('❌ Connection error:', err);
+      setError('Failed to connect wallet');
       setIsConnecting(false);
+    } finally {
+      // Restore console.error after a delay to catch all initialization errors
+      setTimeout(() => {
+        console.error = originalConsoleError;
+      }, 5000);
     }
   }, [accountId, walletType, network]);
 
@@ -274,9 +251,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
   const disconnect = useCallback(async () => {
     try {
       if (hashconnect && saveData?.topic && walletType === 'hashpack') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (hashconnect as any).disconnect(saveData.topic);
-        console.log('✅ Disconnected from HashPack');
+        await disconnectHashPackWallet(hashconnect, saveData.topic);
       }
 
       setWalletType(null);
