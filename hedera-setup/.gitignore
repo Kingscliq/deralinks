@@ -1,0 +1,94 @@
+# ========================================
+# NODE MODULES (CRITICAL!)
+# ========================================
+node_modules/
+/node_modules
+**/node_modules
+
+# Environment variables (CRITICAL - Contains private keys!)
+.env
+.env.local
+.env.*.local
+.env.mainnet
+.env.testnet
+.env.production
+
+# Output directory (CRITICAL - Contains account keys and IDs!)
+output/
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# Build outputs
+dist/
+build/
+*.js
+*.js.map
+*.d.ts
+!*.config.js
+
+# TypeScript cache
+*.tsbuildinfo
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Hedera-specific
+accounts.json
+topics.json
+collections.json
+tokens.json
+nfts.json
+config.json
+frontend.env
+
+# Backup files (may contain sensitive data)
+*.bak
+*.backup
+*_backup
+backups/
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+private_keys/
+
+# IPFS local data
+.ipfs/
+ipfs_data/

@@ -1,0 +1,37 @@
+{
+  "name": "hedera-setup",
+  "version": "1.0.0",
+  "description": "Hello Readme",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "start": "node dist/index.js",
+    "test:connection": "ts-node scripts/test-connection.ts",
+    "test:ipfs": "ts-node scripts/test-ipfs.ts",
+    "setup:accounts": "ts-node scripts/01-create-accounts.ts",
+    "setup:topics": "ts-node scripts/02-create-topics.ts",
+    "setup:collections": "ts-node scripts/03-create-collections.ts",
+    "setup:mint": "ts-node scripts/04-mint-nfts.ts",
+    "test:transfer": "ts-node scripts/05-test-transfer.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@hashgraph/sdk": "^2.75.0",
+    "@types/node": "^24.9.1",
+    "chalk": "^5.6.2",
+    "dotenv": "^17.2.3",
+    "ora": "^9.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "hashconnect": "^3.0.14",
+    "pinata": "^2.5.1"
+  }
+}
