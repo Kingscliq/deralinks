@@ -2,7 +2,8 @@ import './globals.css';
 
 import { Inter } from 'next/font/google';
 import type { Metadata } from 'next';
-import { WalletProvider } from '@/hooks/use-wallet';
+import { ClientProviders } from '@/components/shared/ClientProviders';
+import { WalletConnectCleanup } from '@/components/shared/WalletConnectCleanup';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,11 +18,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <WalletProvider network="testnet">
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
+        <WalletConnectCleanup />
+        <ClientProviders>
           {children}
-        </WalletProvider>
+        </ClientProviders>
       </body>
     </html>
   );

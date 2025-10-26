@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ArrowRight, Shield, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,16 +36,20 @@ export default function HeroSection() {
             <Button
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-7 text-lg rounded-xl shadow-xl shadow-blue-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105"
+              asChild
             >
-              Start Investing
-              <ArrowRight className="ml-2 w-5 h-5" />
+              <Link href="/home">
+                Start Investing
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="border-2 bg-transparent border-white/20 text-white  px-10 py-7 text-lg rounded-xl backdrop-blur-sm transition-all duration-300 hover:border-white/40"
+              asChild
             >
-              Explore Platform
+              <Link href="/marketplace">Explore Platform</Link>
             </Button>
           </div>
 
