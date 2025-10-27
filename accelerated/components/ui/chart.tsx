@@ -8,6 +8,30 @@ import { cn } from '@/lib/utils';
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: '', dark: '.dark' } as const;
 
+/**
+ * Sanitizes CSS color values to prevent XSS
+ * Only allows valid CSS color formats
+ */
+function sanitizeCSSColor(color: string | undefined): string | null {
+  if (!color) return null;
+
+  // Remove any potentially dangerous characters
+  const sanitized = color.trim();
+
+  // Allow only safe CSS color formats:
+  // - Hex colors: #fff, #ffffff
+  // - RGB/RGBA: rgb(...), rgba(...)
+  // - HSL/HSLA: hsl(...), hsla(...)
+  // - Named colors and CSS variables
+  const safeColorPattern = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|var\(--[a-zA-Z0-9-]+\)|[a-z]+)$/;
+
+  if (!safeColorPattern.test(sanitized)) {
+    return null;
+  }
+
+  return sanitized;
+}
+
 export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode;
@@ -76,25 +100,38 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  // Generate CSS with sanitized values
+  const cssContent = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const properties = colorConfig
+        .map(([key, itemConfig]) => {
+          const color =
+            itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+            itemConfig.color;
+
+          // Sanitize color value to prevent XSS
+          const sanitizedColor = sanitizeCSSColor(color);
+
+          if (!sanitizedColor) {
+            return null;
+          }
+
+          // Sanitize key to ensure it's safe for CSS variable names
+          const sanitizedKey = key.replace(/[^a-zA-Z0-9-]/g, '');
+
+          return `  --color-${sanitizedKey}: ${sanitizedColor};`;
+        })
+        .filter(Boolean)
+        .join('\n');
+
+      return `${prefix} [data-chart="${id}"] {\n${properties}\n}`;
+    })
+    .join('\n');
+
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join('\n')}
-}
-`
-          )
-          .join('\n'),
+        __html: cssContent,
       }}
     />
   );

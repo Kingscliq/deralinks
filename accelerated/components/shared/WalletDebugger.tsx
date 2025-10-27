@@ -3,18 +3,20 @@
 import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+interface ProviderInfo {
+  name: string;
+  isHashPack?: boolean;
+  isHashpack?: boolean;
+  isBlade?: boolean;
+  isKabila?: boolean;
+  isMetaMask?: boolean;
+}
+
 interface WalletDetectionState {
   hasEthereum: boolean;
   hasProviders: boolean;
   providersCount: number;
-  providersInfo: Array<{
-    name: string;
-    isHashPack?: boolean;
-    isHashpack?: boolean;
-    isBlade?: boolean;
-    isKabila?: boolean;
-    isMetaMask?: boolean;
-  }>;
+  providersInfo: ProviderInfo[];
   singleProvider: {
     isHashPack?: boolean;
     isHashpack?: boolean;
@@ -23,6 +25,10 @@ interface WalletDetectionState {
     isMetaMask?: boolean;
   };
 }
+
+// Wallet injection delays in milliseconds
+// Wallets inject at different times, so we retry detection multiple times
+const WALLET_DETECTION_DELAYS_MS = [500, 1000, 2000, 3000] as const;
 
 export const WalletDebugger: React.FC = () => {
   const [state, setState] = useState<WalletDetectionState>({
@@ -56,7 +62,7 @@ export const WalletDebugger: React.FC = () => {
       ) {
         newState.providersCount = window.ethereum.providers.length;
         newState.providersInfo = window.ethereum.providers.map(
-          (provider: any) => ({
+          (provider: any): ProviderInfo => ({
             name: provider.constructor?.name || 'Unknown',
             isHashPack: provider.isHashPack,
             isHashpack: provider.isHashpack,
@@ -68,11 +74,11 @@ export const WalletDebugger: React.FC = () => {
       } else {
         // Single provider
         newState.singleProvider = {
-          isHashPack: window.ethereum.isHashPack,
-          isHashpack: window.ethereum.isHashpack,
-          isBlade: window.ethereum.isBlade,
-          isKabila: window.ethereum.isKabila,
-          isMetaMask: window.ethereum.isMetaMask,
+          isHashPack: window.ethereum.isHashPack as boolean | undefined,
+          isHashpack: window.ethereum.isHashpack as boolean | undefined,
+          isBlade: window.ethereum.isBlade as boolean | undefined,
+          isKabila: window.ethereum.isKabila as boolean | undefined,
+          isMetaMask: window.ethereum.isMetaMask as boolean | undefined,
         };
       }
     }
@@ -85,19 +91,25 @@ export const WalletDebugger: React.FC = () => {
     detectWallets();
 
     // Re-detect after delays (wallets inject at different times)
-    const timers = [500, 1000, 2000, 3000].map(delay =>
+    const timers = WALLET_DETECTION_DELAYS_MS.map(delay =>
       setTimeout(detectWallets, delay)
     );
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
   }, []);
 
-  const getWalletName = (info: (typeof state.providersInfo)[0]) => {
+  const getWalletName = (info: ProviderInfo): string => {
     if (info.isHashPack || info.isHashpack) return 'HashPack';
     if (info.isBlade) return 'Blade';
     if (info.isKabila) return 'Kabila';
     if (info.isMetaMask) return 'MetaMask';
     return 'Unknown';
+  };
+
+  const getProviderId = (info: ProviderInfo, index: number): string => {
+    return `${getWalletName(info)}-${index}-${info.name}`;
   };
 
   return (
@@ -144,7 +156,7 @@ export const WalletDebugger: React.FC = () => {
 
           {state.providersInfo.map((info, idx) => (
             <div
-              key={idx}
+              key={getProviderId(info, idx)}
               className="mb-3 p-2 bg-white rounded border border-gray-200"
             >
               <div className="flex items-center justify-between mb-1">

@@ -3,6 +3,13 @@
 import { Building2, Twitter, Linkedin, Github, Mail } from 'lucide-react';
 
 export default function LandingFooter() {
+  const socialLinks = [
+    { id: 'twitter', icon: <Twitter className="w-5 h-5" />, href: '#', label: 'Twitter' },
+    { id: 'linkedin', icon: <Linkedin className="w-5 h-5" />, href: '#', label: 'LinkedIn' },
+    { id: 'github', icon: <Github className="w-5 h-5" />, href: '#', label: 'GitHub' },
+    { id: 'email', icon: <Mail className="w-5 h-5" />, href: '#', label: 'Email' },
+  ];
+
   const links = {
     platform: [
       { label: 'Browse Assets', href: '#' },
@@ -45,15 +52,11 @@ export default function LandingFooter() {
               Democratizing access to real-world assets through blockchain-powered NFT tokenization on Hedera Hashgraph.
             </p>
             <div className="flex gap-3">
-              {[
-                { icon: <Twitter className="w-5 h-5" />, href: '#' },
-                { icon: <Linkedin className="w-5 h-5" />, href: '#' },
-                { icon: <Github className="w-5 h-5" />, href: '#' },
-                { icon: <Mail className="w-5 h-5" />, href: '#' },
-              ].map((social, i) => (
+              {socialLinks.map((social) => (
                 <a
-                  key={i}
+                  key={social.id}
                   href={social.href}
+                  aria-label={social.label}
                   className="w-10 h-10 rounded-lg bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 hover:border-blue-500/50 transition-all duration-300"
                 >
                   {social.icon}

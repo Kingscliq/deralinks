@@ -297,7 +297,72 @@ npm run typecheck  # Runs tsc --noEmit
 npm run lint  # Runs next lint
 ```
 
-**Note:** ESLint is configured to ignore errors during builds (`ignoreDuringBuilds: true`).
+**Note:** ESLint is configured to run during builds with specific directories enabled.
+
+### Troubleshooting HashPack Wallet
+
+If HashPack extension is installed but not detected by the app:
+
+**Quick fix (works 95% of the time):**
+1. Open a **brand new browser tab** (close old ones)
+2. Go to `chrome://extensions/` and verify HashPack is **enabled** (blue toggle)
+3. Click the **HashPack extension icon** and **unlock** if it's locked
+4. **Fully quit Chrome** (Cmd+Q on Mac, Alt+F4 on Windows) and reopen
+5. Open **new tab** → `http://localhost:3000`
+
+**Detailed guides:**
+- `HASHPACK_QUICKFIX.md` - Most common solutions (start here)
+- `HASHPACK_INSTALLED_NOT_DETECTED.md` - 10-step troubleshooting guide
+- `HASHPACK_DEBUG_GUIDE.md` - Console debugging commands
+- `HASHPACK_DETECTION_FIX.md` - Installation verification
+
+**Most common causes:**
+- Page loaded before extension activated (needs new tab + refresh)
+- Extension is locked (needs password unlock)
+- Chrome not fully restarted (extension didn't inject)
+
+## Environment Variables
+
+### Setup
+1. Copy the example file:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. Configure required variables:
+   ```env
+   NEXT_PUBLIC_WALLET_PROJECT_ID=your-walletconnect-project-id
+   NEXT_PUBLIC_HEDERA_NETWORK=testnet
+   ```
+
+3. Get your WalletConnect Project ID from [cloud.walletconnect.com](https://cloud.walletconnect.com/)
+
+### Using Environment Variables
+
+Use the type-safe `env` utility instead of accessing `process.env` directly:
+
+```typescript
+import { env } from '@/lib/env';
+
+const projectId = env.walletProjectId;
+const network = env.hederaNetwork;
+const isDev = env.isDevelopment;
+```
+
+### Validation
+
+The app includes built-in validation. To check your configuration:
+
+```typescript
+import { validateEnv } from '@/lib/env';
+
+const { valid, errors } = validateEnv();
+if (!valid) {
+  console.error('Environment errors:', errors);
+}
+```
+
+See `ENVIRONMENT_SETUP.md` for detailed configuration guide.
 
 ## Important Notes
 
@@ -307,14 +372,8 @@ npm run lint  # Runs next lint
 - No middleware support
 - No rewrites or redirects at runtime
 
-### Environment Variables
-Not currently used, but if needed:
-- Create `.env.local` for local development
-- Add variables prefixed with `NEXT_PUBLIC_` for client-side access
-- Never commit `.env.local` to git
-
 ### WalletConnect Project ID
-Current project ID in `use-wallet.tsx:49` is a demo ID. Replace with your own from [walletconnect.com](https://walletconnect.com) for production.
+The project ID is now loaded from environment variables. Set `NEXT_PUBLIC_WALLET_PROJECT_ID` in your `.env.local` file. Get your ID from [cloud.walletconnect.com](https://cloud.walletconnect.com/).
 
 ### Supabase Configuration
 Supabase client is installed but not actively used. To integrate:

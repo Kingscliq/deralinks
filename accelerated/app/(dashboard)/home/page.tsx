@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import Navbar from '@/components/shared/Navbar';
 import WelcomeHeader from '@/components/dashboard/WelcomeHeader';
 import PortfolioOverview from '@/components/dashboard/PortfolioOverview';
@@ -37,9 +38,12 @@ export default function DashboardHomePage() {
           <p className="text-slate-400 mb-6">
             Explore our marketplace to find premium assets matching your investment goals
           </p>
-          <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40">
+          <Link
+            href="/marketplace"
+            className="inline-block px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40"
+          >
             Browse Marketplace
-          </button>
+          </Link>
         </div>
       </div>
     </div>
