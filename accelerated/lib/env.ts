@@ -8,7 +8,7 @@
 
 export const env = {
   // WalletConnect Project ID
-  walletProjectId: process.env.NEXT_PUBLIC_WALLET_PROJECT_ID || '',
+  walletProjectId: process.env.NEXT_PUBLIC_WALLET_PROJECT_ID || '43965c474745747882936ac7947a3aa7',
 
   // Hedera Network (testnet or mainnet)
   hederaNetwork: (process.env.NEXT_PUBLIC_HEDERA_NETWORK || 'testnet') as 'testnet' | 'mainnet',
@@ -46,6 +46,8 @@ export function validateEnv(): { valid: boolean; errors: string[] } {
     errors.push('NEXT_PUBLIC_HEDERA_NETWORK must be either "testnet" or "mainnet"');
   }
 
+
+  console.log('env', env);
   return {
     valid: errors.length === 0,
     errors,
