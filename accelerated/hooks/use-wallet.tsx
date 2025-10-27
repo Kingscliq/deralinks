@@ -7,6 +7,9 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { logger } from '@/lib/logger';
+import type { EthereumProvider } from '@/types/ethereum';
+import { getHederaWallet } from '@/lib/hedera-wallet';
 
 // Wallet types
 export type WalletType = 'hashpack' | 'blade' | 'kabila' | 'metamask' | null;
@@ -45,8 +48,8 @@ export const useWallet = () => {
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({
   children,
-  network = 'testnet',
-  projectId = 'e49a89cf70b773fc85b4837ce47ff416', // Demo project ID - replace with yours
+  network = (process.env.NEXT_PUBLIC_HEDERA_NETWORK as 'testnet' | 'mainnet') || 'testnet',
+  projectId = process.env.NEXT_PUBLIC_WALLET_PROJECT_ID || '',
 }) => {
   const [walletType, setWalletType] = useState<WalletType>(null);
   const [account, setAccount] = useState<string | null>(null);
@@ -54,116 +57,52 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Connect to HashPack
+  // Connect to HashPack (and other Hedera wallets via WalletConnect)
   const connectHashPack = useCallback(async () => {
+    // Guard against SSR
+    if (typeof window === 'undefined') {
+      logger.error('Cannot connect wallet during SSR');
+      return;
+    }
+
     try {
       setIsConnecting(true);
       setError(null);
 
-      console.log('🔍 Starting HashPack detection...');
-      console.log('window.ethereum exists:', !!window.ethereum);
+      logger.log('🔍 Connecting to Hedera wallet via WalletConnect...');
 
-      if (typeof window === 'undefined' || !window.ethereum) {
-        console.error('❌ No window.ethereum found');
-        throw new Error(
-          'HashPack not found. Please install it from https://www.hashpack.app/download'
-        );
+      // Use the Hedera WalletConnect integration
+      const hederaWallet = getHederaWallet();
+      const session = await hederaWallet.connect();
+
+      if (!session || !session.accountId) {
+        throw new Error('Failed to connect to Hedera wallet');
       }
 
-      let hashpackProvider = window.ethereum;
-
-      // Handle multiple wallet providers
-      if (
-        window.ethereum.providers &&
-        Array.isArray(window.ethereum.providers)
-      ) {
-        console.log(
-          '📦 Multiple providers detected:',
-          window.ethereum.providers.length
-        );
-
-        // Log each provider's properties
-        window.ethereum.providers.forEach((p: any, i: number) => {
-          console.log(`Provider ${i}:`, {
-            isHashPack: p.isHashPack,
-            isHashpack: p.isHashpack,
-            isBlade: p.isBlade,
-            isMetaMask: p.isMetaMask,
-            constructor: p.constructor?.name,
-          });
-        });
-
-        const foundProvider = window.ethereum.providers.find(
-          (provider: any) => provider.isHashPack || provider.isHashpack
-        );
-
-        if (foundProvider) {
-          hashpackProvider = foundProvider;
-          console.log('✅ Found HashPack in providers array');
-        } else {
-          console.error('❌ HashPack not found in providers array');
-          console.error(
-            '💡 Tip: Make sure HashPack extension is enabled in chrome://extensions/'
-          );
-          throw new Error(
-            'HashPack not detected. Please install it from https://www.hashpack.app/download'
-          );
-        }
-      } else {
-        console.log('📦 Single provider detected');
-        console.log('Provider properties:', {
-          isHashPack: window.ethereum.isHashPack,
-          isHashpack: window.ethereum.isHashpack,
-          isBlade: window.ethereum.isBlade,
-          isMetaMask: window.ethereum.isMetaMask,
-        });
-
-        const isHashPack =
-          window.ethereum.isHashPack || window.ethereum.isHashpack;
-        if (!isHashPack) {
-          console.error('❌ HashPack properties not found on provider');
-          console.error('💡 Detected wallet:', {
-            isMetaMask: window.ethereum.isMetaMask,
-            isBlade: window.ethereum.isBlade,
-          });
-          throw new Error(
-            'HashPack not detected. Please install it from https://www.hashpack.app/download'
-          );
-        }
-        console.log('✅ HashPack properties found on single provider');
-      }
-
-      const accounts = (await (hashpackProvider as any).request({
-        method: 'eth_requestAccounts',
-      })) as string[];
-
-      if (!accounts || accounts.length === 0) {
-        throw new Error('No accounts found in HashPack');
-      }
-
-      const address = accounts[0];
-      setAccount(address);
-      setAccountId(address); // HashPack returns Hedera account ID format
+      // Set the connected account
+      setAccount(session.accountId);
+      setAccountId(session.accountId);
       setWalletType('hashpack');
 
-      localStorage.setItem('selectedWallet', 'hashpack');
-      localStorage.setItem('walletAddress', address);
+      // Save to localStorage
+      try {
+        localStorage.setItem('selectedWallet', 'hashpack');
+        localStorage.setItem('walletAddress', session.accountId);
+      } catch (storageError) {
+        logger.log('⚠️ Could not save to localStorage:', storageError);
+      }
 
-      console.log('✅ HashPack connected successfully:', address);
+      logger.log('✅ Hedera wallet connected successfully:', session.accountId);
     } catch (err: any) {
-      let errorMessage = 'Failed to connect to HashPack';
+      let errorMessage = 'Failed to connect to Hedera wallet';
 
       if (err?.message) {
         errorMessage = err.message;
-      } else if (err?.code === 4001) {
-        errorMessage = 'Connection rejected by user';
-      } else if (err?.code === -32002) {
-        errorMessage =
-          'Connection request already pending. Please check HashPack popup.';
       }
 
       setError(errorMessage);
-      console.error('❌ HashPack connection error:', err);
+      logger.error('❌ Hedera wallet connection error:', err);
+      // Don't re-throw - let the error state handle it
     } finally {
       setIsConnecting(false);
     }
@@ -181,7 +120,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         );
       }
 
-      let bladeProvider = window.ethereum;
+      let bladeProvider: EthereumProvider = window.ethereum as any;
 
       // Handle multiple wallet providers
       if (
@@ -189,12 +128,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         Array.isArray(window.ethereum.providers)
       ) {
         const foundProvider = window.ethereum.providers.find(
-          (provider: any) => provider.isBlade
+          (provider: EthereumProvider) => provider.isBlade
         );
 
         if (foundProvider) {
           bladeProvider = foundProvider;
-          console.log('Found Blade in providers array');
+          logger.log('Found Blade in providers array');
         } else {
           throw new Error(
             'Blade Wallet not detected. Please install it from https://bladewallet.io'
@@ -206,7 +145,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         );
       }
 
-      const accounts = (await (bladeProvider as any).request({
+      const accounts = (await bladeProvider.request({
         method: 'eth_requestAccounts',
       })) as string[];
 
@@ -219,10 +158,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
       setAccountId(address);
       setWalletType('blade');
 
-      localStorage.setItem('selectedWallet', 'blade');
-      localStorage.setItem('walletAddress', address);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedWallet', 'blade');
+        localStorage.setItem('walletAddress', address);
+      }
 
-      console.log('✅ Blade connected successfully:', address);
+      logger.log('✅ Blade connected successfully:', address);
     } catch (err: any) {
       let errorMessage = 'Failed to connect to Blade Wallet';
 
@@ -236,7 +177,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
       }
 
       setError(errorMessage);
-      console.error('❌ Blade connection error:', err);
+      logger.error('❌ Blade connection error:', err);
     } finally {
       setIsConnecting(false);
     }
@@ -254,7 +195,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         );
       }
 
-      let kabilaProvider = window.ethereum;
+      let kabilaProvider: EthereumProvider = window.ethereum as any;
 
       // Handle multiple wallet providers
       if (
@@ -262,12 +203,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         Array.isArray(window.ethereum.providers)
       ) {
         const foundProvider = window.ethereum.providers.find(
-          (provider: any) => provider.isKabila
+          (provider: EthereumProvider) => provider.isKabila
         );
 
         if (foundProvider) {
           kabilaProvider = foundProvider;
-          console.log('Found Kabila in providers array');
+          logger.log('Found Kabila in providers array');
         } else {
           throw new Error(
             'Kabila Wallet not detected. Please install it from https://kabila.app'
@@ -279,7 +220,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         );
       }
 
-      const accounts = (await (kabilaProvider as any).request({
+      const accounts = (await kabilaProvider.request({
         method: 'eth_requestAccounts',
       })) as string[];
 
@@ -292,10 +233,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
       setAccountId(address);
       setWalletType('kabila');
 
-      localStorage.setItem('selectedWallet', 'kabila');
-      localStorage.setItem('walletAddress', address);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedWallet', 'kabila');
+        localStorage.setItem('walletAddress', address);
+      }
 
-      console.log('✅ Kabila connected successfully:', address);
+      logger.log('✅ Kabila connected successfully:', address);
     } catch (err: any) {
       let errorMessage = 'Failed to connect to Kabila Wallet';
 
@@ -309,7 +252,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
       }
 
       setError(errorMessage);
-      console.error('❌ Kabila connection error:', err);
+      logger.error('❌ Kabila connection error:', err);
     } finally {
       setIsConnecting(false);
     }
@@ -327,7 +270,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         );
       }
 
-      let metamaskProvider = window.ethereum;
+      let metamaskProvider: EthereumProvider = window.ethereum as any;
 
       // Handle multiple wallet providers
       if (
@@ -335,12 +278,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         Array.isArray(window.ethereum.providers)
       ) {
         const foundProvider = window.ethereum.providers.find(
-          (provider: any) => provider.isMetaMask
+          (provider: EthereumProvider) => provider.isMetaMask
         );
 
         if (foundProvider) {
           metamaskProvider = foundProvider;
-          console.log('Found MetaMask in providers array');
+          logger.log('Found MetaMask in providers array');
         } else {
           throw new Error(
             'MetaMask not detected. Please install it from https://metamask.io'
@@ -352,7 +295,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
         );
       }
 
-      const accounts = (await (metamaskProvider as any).request({
+      const accounts = (await metamaskProvider.request({
         method: 'eth_requestAccounts',
       })) as string[];
 
@@ -364,10 +307,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
       setAccount(address);
       setWalletType('metamask');
 
-      localStorage.setItem('selectedWallet', 'metamask');
-      localStorage.setItem('walletAddress', address);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedWallet', 'metamask');
+        localStorage.setItem('walletAddress', address);
+      }
 
-      console.log('✅ MetaMask connected successfully:', address);
+      logger.log('✅ MetaMask connected successfully:', address);
     } catch (err: any) {
       let errorMessage = 'Failed to connect to MetaMask';
 
@@ -381,7 +326,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
       }
 
       setError(errorMessage);
-      console.error('❌ MetaMask connection error:', err);
+      logger.error('❌ MetaMask connection error:', err);
     } finally {
       setIsConnecting(false);
     }
@@ -415,34 +360,47 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
   // Disconnect wallet
   const disconnect = useCallback(async () => {
     try {
+      // If connected via Hedera WalletConnect, disconnect properly
+      if (walletType === 'hashpack') {
+        const hederaWallet = getHederaWallet();
+        await hederaWallet.disconnect();
+      }
+
       setWalletType(null);
       setAccount(null);
       setAccountId(null);
       setError(null);
 
-      localStorage.removeItem('selectedWallet');
-      localStorage.removeItem('walletAddress');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('selectedWallet');
+        localStorage.removeItem('walletAddress');
+      }
 
-      console.log('✅ Wallet disconnected');
+      logger.log('✅ Wallet disconnected');
     } catch (err: any) {
-      console.error('❌ Disconnect error:', err);
+      logger.error('❌ Disconnect error:', err);
     }
-  }, []);
+  }, [walletType]);
 
   // Auto-reconnect on page load
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const savedWallet = localStorage.getItem('selectedWallet') as WalletType;
     const savedAddress = localStorage.getItem('walletAddress');
 
     if (savedWallet && savedAddress) {
       // Attempt to reconnect silently
-      connect(savedWallet).catch(() => {
+      connect(savedWallet).catch((err) => {
         // Clear saved data if reconnection fails
-        localStorage.removeItem('selectedWallet');
-        localStorage.removeItem('walletAddress');
+        logger.warn('Auto-reconnect failed:', err);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('selectedWallet');
+          localStorage.removeItem('walletAddress');
+        }
       });
     }
-  }, []);
+  }, [connect]);
 
   const value: WalletContextType = {
     walletType,
@@ -459,10 +417,3 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
     <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
   );
 };
-
-// Type declarations for ethereum provider
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}

@@ -75,12 +75,13 @@ export const WalletButton: React.FC = () => {
   useEffect(() => {
     const detectWallets = () => {
       const wallets = {
-        hashpack: false,
+        hashpack: true, // Always available via WalletConnect - doesn't require window.ethereum
         blade: false,
         kabila: false,
         metamask: false,
       };
 
+      // Detect Ethereum-compatible wallets (Blade, Kabila, MetaMask)
       if (typeof window !== 'undefined' && window.ethereum) {
         // Check for multiple providers
         if (
@@ -88,16 +89,12 @@ export const WalletButton: React.FC = () => {
           Array.isArray(window.ethereum.providers)
         ) {
           window.ethereum.providers.forEach((provider: any) => {
-            if (provider.isHashPack || provider.isHashpack)
-              wallets.hashpack = true;
             if (provider.isBlade) wallets.blade = true;
             if (provider.isKabila) wallets.kabila = true;
             if (provider.isMetaMask) wallets.metamask = true;
           });
         } else {
           // Single provider
-          if (window.ethereum.isHashPack || window.ethereum.isHashpack)
-            wallets.hashpack = true;
           if (window.ethereum.isBlade) wallets.blade = true;
           if (window.ethereum.isKabila) wallets.kabila = true;
           if (window.ethereum.isMetaMask) wallets.metamask = true;
