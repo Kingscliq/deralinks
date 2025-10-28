@@ -40,8 +40,9 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (use install for now, ci later when we have package-lock)
-RUN npm install --only=production && \
+# Install ALL dependencies (including dev dependencies like TypeScript)
+# This is needed to compile TypeScript to JavaScript
+RUN npm install && \
     npm cache clean --force
 
 # Copy source code
@@ -49,6 +50,9 @@ COPY . .
 
 # Build TypeScript
 RUN npm run build
+
+# Now install only production dependencies for the final image
+RUN npm prune --production
 
 # Production stage
 FROM node:20-alpine AS production
