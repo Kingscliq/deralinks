@@ -10,17 +10,32 @@ let pool: Pool | null = null;
 // Initialize database connection
 export const initDatabase = (): Pool => {
   if (!pool) {
-    pool = new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      user: process.env.DB_USER || 'deralinks',
-      password: process.env.DB_PASSWORD || 'deralinks_dev_password',
-      database: process.env.DB_NAME || 'deralinks_db',
-      max: parseInt(process.env.DB_POOL_MAX || '10'),
-      min: parseInt(process.env.DB_POOL_MIN || '2'),
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    });
+    // Check if DATABASE_URL is provided (Render, Heroku, etc.)
+    if (process.env.DATABASE_URL) {
+      console.log('🔌 Using DATABASE_URL for connection');
+      pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+        max: parseInt(process.env.DB_POOL_MAX || '10'),
+        min: parseInt(process.env.DB_POOL_MIN || '2'),
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
+    } else {
+      // Use individual environment variables (local development)
+      console.log('🔌 Using individual DB variables for connection');
+      pool = new Pool({
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        user: process.env.DB_USER || 'deralinks',
+        password: process.env.DB_PASSWORD || 'deralinks_dev_password',
+        database: process.env.DB_NAME || 'deralinks_db',
+        max: parseInt(process.env.DB_POOL_MAX || '10'),
+        min: parseInt(process.env.DB_POOL_MIN || '2'),
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
+    }
 
     pool.on('error', (err: Error) => {
       console.error('Unexpected database error:', err);
