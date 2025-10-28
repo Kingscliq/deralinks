@@ -15,6 +15,12 @@
     "setup:collections": "ts-node scripts/03-create-collections.ts",
     "setup:mint": "ts-node scripts/04-mint-nfts.ts",
     "test:transfer": "ts-node scripts/05-test-transfer.ts",
+    "upload:ipfs": "ts-node scripts/06-upload-to-ipfs.ts",
+    "batch:transfer": "ts-node scripts/07-batch-transfer-nfts.ts",
+    "remint:ipfs": "ts-node scripts/08-remint-with-real-ipfs.ts",
+    "kyc:create-collection": "ts-node scripts/09-create-verification-collection.ts",
+    "kyc:mint": "ts-node scripts/10-mint-verification-nft.ts",
+    "kyc:revoke": "ts-node scripts/11-revoke-verification.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -1,0 +1,190 @@
+# Render Blueprint for DeraLinks Backend
+# Deploy with: render blueprint create or via Render Dashboard
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: deralinks-postgres
+    env: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3600
+      - key: API_VERSION
+        value: v1
+
+      # Database Configuration (will be set from Render Postgres)
+      - key: DB_HOST
+        fromDatabase:
+          name: deralinks-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: deralinks-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: deralinks-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: deralinks-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: deralinks-db
+          property: database
+      - key: DATABASE_URL
+        fromDatabase:
+          name: deralinks-db
+          property: connectionString
+      - key: DB_SSL
+        value: true
+      - key: DB_POOL_MIN
+        value: 2
+      - key: DB_POOL_MAX
+        value: 10
+
+      # Redis Configuration
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: deralinks-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: deralinks-redis
+          property: port
+      - key: REDIS_PASSWORD
+        fromService:
+          type: redis
+          name: deralinks-redis
+          property: password
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: deralinks-redis
+          property: connectionString
+
+      # Hedera Configuration (Add as Secret in Render Dashboard)
+      - key: OPERATOR_ID
+        sync: false  # Must be set manually in Render Dashboard
+      - key: OPERATOR_KEY
+        sync: false  # Must be set manually in Render Dashboard
+      - key: HEDERA_NETWORK
+        value: testnet
+      - key: HEDERA_MIRROR_NODE_URL
+        value: https://testnet.mirrornode.hedera.com
+
+      # Treasury & Platform Accounts (Add as Secrets)
+      - key: TREASURY_ACCOUNT_ID
+        sync: false
+      - key: TREASURY_PRIVATE_KEY
+        sync: false
+      - key: FEE_COLLECTOR_ACCOUNT_ID
+        sync: false
+      - key: ADMIN_ACCOUNT_ID
+        sync: false
+
+      # IPFS/Pinata Configuration (Add as Secrets)
+      - key: PINATA_API_KEY
+        sync: false
+      - key: PINATA_SECRET_KEY
+        sync: false
+      - key: PINATA_JWT
+        sync: false
+
+      # JWT Authentication (Generate secure values)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+
+      # Session Secret (Generate secure value)
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # CORS Configuration
+      - key: CORS_ORIGIN
+        value: https://your-frontend-url.onrender.com
+      - key: CORS_CREDENTIALS
+        value: true
+
+      # Rate Limiting
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+
+      # Platform Fees
+      - key: PLATFORM_FEE_PERCENTAGE
+        value: 2.5
+      - key: ROYALTY_FEE_PERCENTAGE
+        value: 5.0
+
+      # KYC Configuration
+      - key: KYC_REQUIRED_FOR_PURCHASE
+        value: false
+      - key: KYC_THRESHOLD_USD
+        value: 2000
+
+      # DAO Governance Defaults
+      - key: DEFAULT_QUORUM_PERCENTAGE
+        value: 50
+      - key: DEFAULT_APPROVAL_THRESHOLD
+        value: 50
+      - key: DEFAULT_VOTING_PERIOD_DAYS
+        value: 7
+
+      # Cache TTL
+      - key: CACHE_TTL_SHORT
+        value: 300
+      - key: CACHE_TTL_MEDIUM
+        value: 3600
+      - key: CACHE_TTL_LONG
+        value: 86400
+
+      # File Upload
+      - key: MAX_FILE_SIZE_MB
+        value: 10
+      - key: ALLOWED_FILE_TYPES
+        value: image/jpeg,image/png,image/webp,application/pdf
+
+      # Logging
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_FILE_PATH
+        value: /tmp/logs
+
+      # Frontend URL (Update after deploying frontend)
+      - key: FRONTEND_URL
+        value: https://your-frontend-url.onrender.com
+
+    healthCheckPath: /health
+    autoDeploy: true
+
+# PostgreSQL Database
+databases:
+  - name: deralinks-db
+    databaseName: deralinks
+    plan: starter
+    region: oregon
+    postgresMajorVersion: 15
+
+# Redis Cache
+services:
+  - type: redis
+    name: deralinks-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

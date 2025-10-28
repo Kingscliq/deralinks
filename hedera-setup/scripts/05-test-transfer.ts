@@ -44,54 +44,70 @@ async function main() {
     }
 
     const treasuryId = AccountId.fromString(accounts.treasury.accountId);
-    const treasuryKey = PrivateKey.fromString(accounts.treasury.privateKey);
+    const treasuryKey = PrivateKey.fromStringDer(accounts.treasury.privateKey);
     const recipientId = AccountId.fromString(recipientAccountId);
+    const operatorId = AccountId.fromString(process.env.OPERATOR_ID || "");
 
     // Let's transfer the first Agriculture NFT (serial #1)
-    const tokenId = collections.agriculture.tokenId;
-    const serialNumber = 1;
-    const propertyName = nfts.agriculture[0].metadata.name;
+    const tokenId = collections.realEstate.tokenId;
+    const serialNumber = 24;
+    const propertyName = nfts.realEstate[0].metadata.name;
 
     console.log("\n📋 Transfer Details:");
-    console.log(`   NFT Collection: ${tokenId} (Agriculture)`);
+    console.log(`   NFT Collection: ${tokenId} (Real Estate)`);
     console.log(`   Property: ${propertyName}`);
     console.log(`   Serial Number: ${serialNumber}`);
     console.log(`   From: ${treasuryId.toString()} (Treasury)`);
     console.log(`   To: ${recipientId.toString()}`);
 
+    // Check if recipient is the operator (we have their key)
+    const isOperatorRecipient = recipientId.toString() === operatorId.toString();
+
     // Step 1: Associate the recipient account with the token
-    console.log("\n📎 Step 1: Associating recipient with token...");
+    console.log("\n📎 Step 1: Token Association");
 
-    try {
-      // Try to associate - will use operator key if recipient is operator
-      const operatorKey = getOperatorKey();
+    if (isOperatorRecipient) {
+      try {
+        // Try to associate - will use operator key if recipient is operator
+        const operatorKey = getOperatorKey();
 
-      const associateTx = new TokenAssociateTransaction()
-        .setAccountId(recipientId)
-        .setTokenIds([tokenId])
-        .freezeWith(client);
+        const associateTx = new TokenAssociateTransaction()
+          .setAccountId(recipientId)
+          .setTokenIds([tokenId])
+          .freezeWith(client);
 
-      const signedAssociateTx = await associateTx.sign(operatorKey);
-      const associateResponse = await signedAssociateTx.execute(client);
-      const associateReceipt = await associateResponse.getReceipt(client);
+        const signedAssociateTx = await associateTx.sign(operatorKey);
+        const associateResponse = await signedAssociateTx.execute(client);
+        const associateReceipt = await associateResponse.getReceipt(client);
 
-      log(`   ✅ Token associated!`);
-      log(`   📊 Status: ${associateReceipt.status.toString()}`);
-    } catch (error: any) {
-      if (error.status && error.status._code === 25) {
-        log("   ✅ Token already associated!");
-      } else {
-        console.log(`   ⚠️  Association error: ${error.message}`);
-        console.log("   If using a different wallet, manually associate at:");
-        console.log(`   https://hashscan.io/testnet/token/${tokenId}\n`);
-        throw error;
+        log(`   ✅ Token associated!`);
+        log(`   📊 Status: ${associateReceipt.status.toString()}`);
+      } catch (error: any) {
+        if (error.status && (error.status._code === 25 || error.status._code === 194)) {
+          // Code 25: TOKEN_NOT_ASSOCIATED_TO_ACCOUNT (shouldn't happen)
+          // Code 194: TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT (this is fine!)
+          log("   ✅ Token already associated!");
+        } else {
+          throw error;
+        }
       }
+    } else {
+      console.log("   ⚠️  Recipient is an external account (not operator)");
+      console.log("   ℹ️  The recipient must associate with the token manually");
+      console.log("\n   📝 Instructions for recipient:");
+      console.log(`      1. Go to: https://hashscan.io/testnet/token/${tokenId}`);
+      console.log("      2. Click 'Associate' button");
+      console.log("      3. Sign with your wallet");
+      console.log("\n   ⏸️  Skipping association (assuming already done)...");
     }
 
     // Step 2: Grant KYC to the recipient
     console.log("\n✅ Step 2: Granting KYC to recipient...");
 
-    const kycKey = PrivateKey.fromString(collections.agriculture.kycKey);
+    // Determine which collection we're using
+    const collectionKey = tokenId === collections.realEstate.tokenId ? 'realEstate' :
+                          tokenId === collections.agriculture.tokenId ? 'agriculture' : 'properties';
+    const kycKey = PrivateKey.fromStringDer(collections[collectionKey].kycKey);
 
     const kycTx = new TokenGrantKycTransaction()
       .setAccountId(recipientId)
@@ -134,16 +150,28 @@ async function main() {
     console.log("   3. NFT metadata should be visible on HashScan\n");
 
   } catch (error: any) {
-    console.error("\n❌ Error during transfer:", error);
+    console.error("\n❌ Error during transfer:", error.message || error);
 
     if (error.status) {
       console.log(`\nError code: ${error.status._code}`);
-      console.log("Common errors:");
+      console.log("\nCommon errors:");
+      console.log("  7 - INVALID_SIGNATURE: Can't sign for external account (recipient must associate manually)");
       console.log("  11 - INVALID_ACCOUNT_ID: Check the recipient account ID");
-      console.log("  25 - TOKEN_NOT_ASSOCIATED_TO_ACCOUNT: Recipient must associate first");
+      console.log("  25 - TOKEN_NOT_ASSOCIATED_TO_ACCOUNT: Recipient must associate token first");
       console.log("  155 - ACCOUNT_FROZEN_FOR_TOKEN: Account might be frozen");
       console.log("  167 - INSUFFICIENT_TOKEN_BALANCE: Treasury doesn't own this NFT");
-      console.log("  176 - ACCOUNT_KYC_NOT_GRANTED_FOR_TOKEN: KYC grant failed (should be automatic now)");
+      console.log("  176 - ACCOUNT_KYC_NOT_GRANTED_FOR_TOKEN: KYC grant failed");
+
+      if (error.status._code === 7 || error.status._code === 25) {
+        // Load collections to get token ID
+        const collections = loadJSON("collections.json");
+        const tokenId = collections?.agriculture?.tokenId || "TOKEN_ID";
+
+        console.log("\n💡 Solution: The recipient must manually associate with the token:");
+        console.log(`   1. Visit: https://hashscan.io/testnet/token/${tokenId}`);
+        console.log("   2. Click 'Associate' and sign with their wallet");
+        console.log("   3. Re-run this transfer script");
+      }
     }
 
     process.exit(1);

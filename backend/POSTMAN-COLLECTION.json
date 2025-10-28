@@ -1,0 +1,529 @@
+{
+  "info": {
+    "name": "DeraLinks API",
+    "description": "Complete API collection for DeraLinks RWA Platform",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3600/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accountId",
+      "value": "0.0.123456",
+      "type": "string"
+    },
+    {
+      "key": "signature",
+      "value": "0x...",
+      "type": "string"
+    },
+    {
+      "key": "publicKey",
+      "value": "302a300506032b6570032100...",
+      "type": "string"
+    },
+    {
+      "key": "propertyId",
+      "value": "uuid-123",
+      "type": "string"
+    },
+    {
+      "key": "tokenId",
+      "value": "0.0.7128093",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Properties",
+      "item": [
+        {
+          "name": "Mint Property NFT Collection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ownerHederaAccount\": \"0.0.7127074\",\n  \"propertyName\": \"Luxury Villa Lagos\",\n  \"collectionName\": \"Luxury Villa Lagos NFTs\",\n  \"collectionSymbol\": \"LVL\",\n  \"propertyType\": \"real_estate\",\n  \"category\": \"residential\",\n  \"address\": \"123 Victoria Island\",\n  \"city\": \"Lagos\",\n  \"country\": \"Nigeria\",\n  \"totalValue\": 500000.00,\n  \"tokenPrice\": 50.00,\n  \"totalSupply\": 10000,\n  \"royaltyPercentage\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/properties/mint",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "mint"]
+            }
+          }
+        },
+        {
+          "name": "List All Properties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/properties?status=active&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Property Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/properties/{{propertyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "{{propertyId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Property",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/properties/{{propertyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "{{propertyId}}"]
+            }
+          }
+        },
+        {
+          "name": "Verify Property Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"signature\": \"{{signature}}\",\n  \"publicKey\": \"{{publicKey}}\",\n  \"message\": \"DeraLinks Authentication...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/properties/{{propertyId}}/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "{{propertyId}}", "verify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tokens",
+      "item": [
+        {
+          "name": "Mint NFTs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenId\": \"{{tokenId}}\",\n  \"quantity\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tokens/mint",
+              "host": ["{{baseUrl}}"],
+              "path": ["tokens", "mint"]
+            }
+          }
+        },
+        {
+          "name": "Get Token Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tokens/{{tokenId}}/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["tokens", "{{tokenId}}", "info"]
+            }
+          }
+        },
+        {
+          "name": "Transfer NFTs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenId\": \"{{tokenId}}\",\n  \"fromAccount\": \"0.0.7127072\",\n  \"toAccount\": \"{{accountId}}\",\n  \"serialNumbers\": [1, 2, 3]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tokens/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["tokens", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "Get Token Holders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tokens/{{tokenId}}/holders",
+              "host": ["{{baseUrl}}"],
+              "path": ["tokens", "{{tokenId}}", "holders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User Assets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{accountId}}/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{accountId}}", "assets"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DAO Governance",
+      "item": [
+        {
+          "name": "Create Proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenId\": \"{{tokenId}}\",\n  \"proposerAccount\": \"{{accountId}}\",\n  \"title\": \"Install Solar Panels\",\n  \"description\": \"Proposal to reduce electricity costs\",\n  \"proposalType\": \"maintenance\",\n  \"votingDurationDays\": 7,\n  \"signature\": \"{{signature}}\",\n  \"publicKey\": \"{{publicKey}}\",\n  \"message\": \"DeraLinks Authentication...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dao/{{propertyId}}/proposals",
+              "host": ["{{baseUrl}}"],
+              "path": ["dao", "{{propertyId}}", "proposals"]
+            }
+          }
+        },
+        {
+          "name": "List Proposals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dao/{{propertyId}}/proposals?status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["dao", "{{propertyId}}", "proposals"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Proposal Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dao/proposals/:proposalId",
+              "host": ["{{baseUrl}}"],
+              "path": ["dao", "proposals", ":proposalId"],
+              "variable": [
+                {
+                  "key": "proposalId",
+                  "value": "uuid-proposal1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vote on Proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voterAccount\": \"{{accountId}}\",\n  \"voteChoice\": \"for\",\n  \"signature\": \"{{signature}}\",\n  \"publicKey\": \"{{publicKey}}\",\n  \"message\": \"DeraLinks Authentication...\",\n  \"reason\": \"This will reduce costs\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dao/proposals/:proposalId/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["dao", "proposals", ":proposalId", "vote"],
+              "variable": [
+                {
+                  "key": "proposalId",
+                  "value": "uuid-proposal1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Vote Results",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dao/proposals/:proposalId/results",
+              "host": ["{{baseUrl}}"],
+              "path": ["dao", "proposals", ":proposalId", "results"],
+              "variable": [
+                {
+                  "key": "proposalId",
+                  "value": "uuid-proposal1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Execute Proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"executorAccount\": \"{{accountId}}\",\n  \"signature\": \"{{signature}}\",\n  \"publicKey\": \"{{publicKey}}\",\n  \"message\": \"DeraLinks Authentication...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dao/proposals/:proposalId/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["dao", "proposals", ":proposalId", "execute"],
+              "variable": [
+                {
+                  "key": "proposalId",
+                  "value": "uuid-proposal1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Property Treasury",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dao/{{propertyId}}/treasury",
+              "host": ["{{baseUrl}}"],
+              "path": ["dao", "{{propertyId}}", "treasury"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Marketplace",
+      "item": [
+        {
+          "name": "Create Listing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerHederaAccount\": \"{{accountId}}\",\n  \"tokenId\": \"{{tokenId}}\",\n  \"serialNumbers\": [1, 2, 3],\n  \"quantity\": 3,\n  \"pricePerNFT\": 55.00,\n  \"currency\": \"USD\",\n  \"title\": \"3 Villa Shares for Sale\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/marketplace/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["marketplace", "list"]
+            }
+          }
+        },
+        {
+          "name": "Get Listings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/marketplace/listings?status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["marketplace", "listings"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Make Offer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"listingId\": \"uuid-listing1\",\n  \"buyerHederaAccount\": \"{{accountId}}\",\n  \"offerPrice\": 52.00,\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/marketplace/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["marketplace", "offers"]
+            }
+          }
+        },
+        {
+          "name": "Buy NFTs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"listingId\": \"uuid-listing1\",\n  \"buyerHederaAccount\": \"{{accountId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/marketplace/buy",
+              "host": ["{{baseUrl}}"],
+              "path": ["marketplace", "buy"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files/IPFS",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/files/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Upload JSON Metadata",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metadata\": {\n    \"name\": \"Property NFT\",\n    \"description\": \"NFT metadata\"\n  },\n  \"filename\": \"metadata.json\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/files/upload-json",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "upload-json"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3600/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3600",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
