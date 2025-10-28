@@ -1,0 +1,12 @@
+Property Image Placeholder
+
+Property ID: RE-002
+Property Name: Commercial Office Building, Accra
+
+This is a placeholder image file.
+Add a real image file named RE-002.jpg (or .png, .webp) to:
+/Users/user/Documents/deralinks/hedera-setup/assets/images/real-estate/
+
+Then re-run: npm run upload:ipfs
+
+Generated: 2025-10-27T12:24:21.408Z

@@ -19,11 +19,16 @@ export function createClient(): Client {
   // Create testnet client
   const client = Client.forTestnet();
 
+  // Handle different key formats
+  let privateKey: PrivateKey;
+  if (operatorKey.startsWith("302e020100")) {
+    privateKey = PrivateKey.fromStringDer(operatorKey);
+  } else {
+    privateKey = PrivateKey.fromStringED25519(operatorKey);
+  }
+
   // Set operator
-  client.setOperator(
-    AccountId.fromString(operatorId),
-    PrivateKey.fromString(operatorKey)
-  );
+  client.setOperator(AccountId.fromString(operatorId), privateKey);
 
   console.log(`✅ Connected to Hedera Testnet`);
   console.log(`📋 Operator: ${operatorId}`);
@@ -46,5 +51,14 @@ export function getOperatorId(): AccountId {
 export function getOperatorKey(): PrivateKey {
   const key = process.env.OPERATOR_KEY;
   if (!key) throw new Error("OPERATOR_KEY not set");
-  return PrivateKey.fromString(key);
+
+  // Handle different key formats
+  // DER-encoded keys start with "302e020100"
+  // Raw hex keys are 64 characters
+  if (key.startsWith("302e020100")) {
+    return PrivateKey.fromStringDer(key);
+  } else {
+    // For raw hex keys, use ED25519 (Hedera's default)
+    return PrivateKey.fromStringED25519(key);
+  }
 }

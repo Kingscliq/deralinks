@@ -1,0 +1,12 @@
+Property Image Placeholder
+
+Property ID: PROP-002
+Property Name: Multi-level Parking Garage, Cape Town CBD
+
+This is a placeholder image file.
+Add a real image file named PROP-002.jpg (or .png, .webp) to:
+/Users/user/Documents/deralinks/hedera-setup/assets/images/properties/
+
+Then re-run: npm run upload:ipfs
+
+Generated: 2025-10-27T12:24:34.001Z

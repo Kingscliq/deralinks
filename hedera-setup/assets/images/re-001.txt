@@ -1,0 +1,9 @@
+Property Image Placeholder
+
+Property ID: RE-001
+Property Name: Luxury Villa in Lekki, Lagos
+
+This is a placeholder image file.
+Replace with actual property photos in production.
+
+Generated: 2025-10-27T09:24:20.247Z
