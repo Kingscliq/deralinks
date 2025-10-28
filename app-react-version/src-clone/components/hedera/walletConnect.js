@@ -11,10 +11,10 @@ async function walletConnectFcn() {
 		pairedWalletData: null,
 		pairedAccounts: [],
 	};
-	
+
 	let appMetadata = {
-		name: "Hedera dApp Days",
-		description: "Let's buidl a dapp on Hedera",
+		name: "Deralinks",
+		description: "Real world Asset tokenisation platform",
 		icon: "https://raw.githubusercontent.com/ed-marquez/hedera-dapp-days/testing/src/assets/hederaLogo.png",
 	};
 
