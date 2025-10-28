@@ -15,7 +15,7 @@ export const initDatabase = (): Pool => {
       console.log('🔌 Using DATABASE_URL for connection');
       pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+        ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
         max: parseInt(process.env.DB_POOL_MAX || '10'),
         min: parseInt(process.env.DB_POOL_MIN || '2'),
         idleTimeoutMillis: 30000,
