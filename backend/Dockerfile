@@ -45,11 +45,14 @@ COPY package*.json ./
 RUN npm install && \
     npm cache clean --force
 
+# Verify TypeScript is installed
+RUN ls -la node_modules/.bin/ | grep tsc || echo "TypeScript not found!"
+
 # Copy source code
 COPY . .
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript using node_modules/.bin/tsc directly
+RUN node_modules/.bin/tsc
 
 # Now install only production dependencies for the final image
 RUN npm prune --production
