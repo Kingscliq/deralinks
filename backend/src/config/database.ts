@@ -13,9 +13,16 @@ export const initDatabase = (): Pool => {
     // Check if DATABASE_URL is provided (Render, Heroku, etc.)
     if (process.env.DATABASE_URL) {
       console.log('🔌 Using DATABASE_URL for connection');
+
+      // Determine SSL configuration
+      const useSSL = process.env.DB_SSL !== 'false';
+      console.log(`🔒 SSL enabled: ${useSSL}`);
+
       pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
+        ssl: useSSL ? {
+          rejectUnauthorized: false,
+        } : undefined,
         max: parseInt(process.env.DB_POOL_MAX || '10'),
         min: parseInt(process.env.DB_POOL_MIN || '2'),
         idleTimeoutMillis: 30000,
