@@ -4,7 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import dotenv from 'dotenv';
-import { initDatabase, testConnection } from './config/database';
+import { initDatabase, testConnection, getPool } from './config/database';
+import { runMigrations } from './database/migrate';
 
 // Route imports
 import propertiesRoutes from './routes/properties.routes';
@@ -193,6 +194,12 @@ const startServer = async () => {
       console.error('❌ Failed to connect to database. Exiting...');
       process.exit(1);
     }
+
+    // Run database migrations
+    console.log('');
+    const pool = getPool();
+    await runMigrations(pool);
+    console.log('');
 
     // Start background sync jobs
     console.log('🔄 Starting blockchain event indexer...');
