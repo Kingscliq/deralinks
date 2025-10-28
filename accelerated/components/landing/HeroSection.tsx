@@ -35,7 +35,7 @@ export default function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Button
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-7 text-lg rounded-xl shadow-xl shadow-blue-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-base font-semibold rounded-lg shadow-lg transition-all duration-200"
               asChild
             >
               <Link href="/home">
@@ -46,34 +46,38 @@ export default function HeroSection() {
             <Button
               size="lg"
               variant="outline"
-              className="border-2 bg-transparent border-white/20 text-white  px-10 py-7 text-lg rounded-xl backdrop-blur-sm transition-all duration-300 hover:border-white/40"
+              className="border-2 bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800 hover:border-slate-600 px-8 py-6 text-base font-semibold rounded-lg backdrop-blur-sm transition-all duration-200"
               asChild
             >
               <Link href="/marketplace">Explore Platform</Link>
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center mb-4 mx-auto">
-                <TrendingUp className="w-7 h-7 text-white" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+            <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800/60 hover:border-slate-600/50 transition-all duration-200">
+              <div className="w-12 h-12 rounded-lg bg-blue-600/20 flex items-center justify-center mb-3 mx-auto">
+                <TrendingUp className="w-6 h-6 text-blue-400" />
               </div>
-              <div className="text-4xl font-bold text-white mb-2">₦45.2B</div>
-              <div className="text-sm text-slate-400">Total Value Locked</div>
+              <div className="text-3xl font-bold text-white mb-1">₦45.2B</div>
+              <div className="text-sm text-slate-400 font-medium">
+                Total Value Locked
+              </div>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center mb-4 mx-auto">
-                <Shield className="w-7 h-7 text-white" />
+            <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800/60 hover:border-slate-600/50 transition-all duration-200">
+              <div className="w-12 h-12 rounded-lg bg-blue-600/20 flex items-center justify-center mb-3 mx-auto">
+                <Shield className="w-6 h-6 text-blue-400" />
               </div>
-              <div className="text-4xl font-bold text-white mb-2">1,247</div>
-              <div className="text-sm text-slate-400">Assets Tokenized</div>
+              <div className="text-3xl font-bold text-white mb-1">1,247</div>
+              <div className="text-sm text-slate-400 font-medium">
+                Assets Tokenized
+              </div>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center mb-4 mx-auto">
+            <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800/60 hover:border-slate-600/50 transition-all duration-200">
+              <div className="w-12 h-12 rounded-lg bg-blue-600/20 flex items-center justify-center mb-3 mx-auto">
                 <svg
-                  className="w-7 h-7 text-white"
+                  className="w-6 h-6 text-blue-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -86,8 +90,10 @@ export default function HeroSection() {
                   />
                 </svg>
               </div>
-              <div className="text-4xl font-bold text-white mb-2">12.4K</div>
-              <div className="text-sm text-slate-400">Active Investors</div>
+              <div className="text-3xl font-bold text-white mb-1">12.4K</div>
+              <div className="text-sm text-slate-400 font-medium">
+                Active Investors
+              </div>
             </div>
           </div>
         </div>

@@ -1,0 +1,632 @@
+# DeraLinks - Real-World Asset Tokenization Platform
+
+## Project Overview
+
+DeraLinks is a comprehensive blockchain-based platform for tokenizing and fractionalizing real-world assets (RWAs) built on the Hedera Hashgraph network. The platform enables users to invest in high-value physical assets through NFT-backed fractional ownership, making previously illiquid and inaccessible investments available to retail investors.
+
+## Core Concept
+
+**Mission**: Democratize access to institutional-grade real-world assets through blockchain technology, allowing anyone to own fractions of premium assets starting from ₦10,000.
+
+**Key Innovation**: Each fractional ownership is represented as a unique NFT on Hedera, providing immutable proof of ownership, transparent valuation, and instant tradability.
+
+## Platform Architecture
+
+### Technology Stack
+
+**Blockchain**: Hedera Hashgraph (Testnet/Mainnet)
+- Fast transaction speeds (<2 seconds)
+- Low gas fees (₦0.05 average)
+- 99.9% platform uptime
+- Energy-efficient consensus mechanism
+
+**Frontend Framework**:
+- Next.js 13.5.1 (React 18.2.0)
+- TypeScript for type safety
+- Tailwind CSS for styling
+- shadcn/ui component library
+- Radix UI primitives
+
+**Wallet Integration**:
+- HashPack (recommended) via WalletConnect
+- Blade Wallet (Hedera native)
+- Kabila Wallet (Hedera native)
+- MetaMask (EVM compatible)
+
+**Key Dependencies**:
+- @hashgraph/hedera-wallet-connect (v2.0.3)
+- @hashgraph/sdk (v2.75.0)
+- @walletconnect/universal-provider
+- Recharts for data visualization
+- Lucide React for icons
+
+## Asset Categories
+
+The platform supports **8 major asset classes**:
+
+1. **Real Estate** (₦18.5B TVL, 542 assets)
+   - Commercial properties
+   - Residential complexes
+   - Premium land holdings
+   - Average return: 8.5%
+
+2. **Commodities** (₦12.8B TVL, 210 assets)
+   - Gold, silver, rare minerals
+   - Verifiable custody
+   - Average return: 12.3%
+
+3. **Fine Art** (₦6.2B TVL, 89 assets)
+   - Museum-quality artwork
+   - Collectibles
+   - Average return: 15.7%
+
+4. **Luxury Vehicles** (₦3.1B TVL, 145 assets)
+   - Classic cars
+   - Limited-edition supercars
+   - Average return: 9.2%
+
+5. **Equipment** (₦2.4B TVL, 134 assets)
+   - Industrial machinery
+   - Operational assets
+   - Average return: 7.8%
+
+6. **Natural Resources** (₦1.8B TVL, 78 assets)
+   - Timberland
+   - Renewable energy infrastructure
+   - Average return: 10.4%
+
+7. **Infrastructure** (₦1.2B TVL, 32 assets)
+   - Transportation hubs
+   - Utility networks
+   - Average return: 6.9%
+
+8. **Energy Assets** (₦920M TVL, 17 assets)
+   - Solar farms
+   - Battery storage facilities
+   - Average return: 11.2%
+
+## Core Features
+
+### 1. Fractional Ownership
+- Break down high-value assets into affordable fractions
+- Minimum investment: ₦10,000
+- Own portions of assets worth millions
+- Transparent ownership records on blockchain
+
+### 2. NFT-Based Proof of Ownership
+- Each token is a unique NFT (NON_FUNGIBLE_UNIQUE)
+- Immutable ownership records on Hedera
+- Built-in royalty mechanisms (3-5% on resales)
+- Metadata stored on Hedera Consensus Service (HCS)
+- Token types: REALESTATE, AGRINFT, PROPNFT
+
+### 3. DAO Governance
+- Token holders participate in asset management decisions
+- Decentralized voting mechanisms
+- Proposal creation and voting rights
+- Transparent decision-making process
+
+### 4. Instant Liquidity
+- 24/7 trading on secondary markets
+- No traditional transaction delays
+- Peer-to-peer transfers
+- Built-in marketplace functionality
+
+### 5. Bank-Grade Security
+- Multi-signature wallet support
+- Institutional-grade custody
+- KYC/AML compliance
+- Token keys: Admin, Supply, KYC, Freeze, Pause, Wipe
+
+### 6. Real-Time Analytics
+- Live portfolio tracking
+- Performance metrics
+- Income monitoring
+- Diversification analysis
+- Interactive dashboards with Recharts
+
+### 7. Global Access
+- Cross-border investments
+- KYC-compliant transactions
+- Multi-currency support (Naira primary)
+- International asset exposure
+
+### 8. AI Valuation
+- Machine learning asset valuations
+- Real-time price updates
+- Market trend analysis
+- Risk assessment
+
+## Smart Contract Architecture
+
+### NFT Collections on Hedera
+
+Each asset category has its own NFT collection with the following structure:
+
+**Collection Properties**:
+- Token Type: NON_FUNGIBLE_UNIQUE
+- Supply Type: INFINITE (allows continuous minting)
+- Treasury Account: Manages collection
+- Fee Collector Account: Receives royalties
+
+**Management Keys**:
+- **Admin Key**: Collection administration
+- **Supply Key**: Minting new NFTs
+- **KYC Key**: Account verification
+- **Freeze Key**: Restrict transfers
+- **Pause Key**: Emergency stop
+- **Wipe Key**: Remove NFTs from accounts
+
+**Royalty Structure**:
+- Real Estate: 5% royalty on secondary sales
+- Agriculture: 3% royalty on secondary sales
+- Properties: 4% royalty on secondary sales
+- Fallback fee: Fixed HBAR amount
+
+**Metadata Management**:
+- Hedera Consensus Service (HCS) topics
+- One metadata topic per asset category
+- Immutable asset documentation
+- Verifiable provenance
+
+## User Interface Components
+
+### Landing Page Components
+
+1. **HeroSection**
+   - Platform value proposition
+   - Key statistics (TVL, Assets, Investors)
+   - Primary CTAs (Start Investing, Explore Platform)
+
+2. **TrustIndicators**
+   - Social proof and credibility markers
+   - Security certifications
+
+3. **HowItWorks**
+   - User onboarding flow
+   - Step-by-step process
+
+4. **AssetCategories**
+   - 8 asset classes with details
+   - TVL and returns per category
+
+5. **FeaturesGrid**
+   - 8 core platform features
+   - Platform metrics (uptime, speed, fees)
+
+6. **UseCases**
+   - Real-world application scenarios
+
+7. **PlatformStats**
+   - Live statistics and metrics
+
+8. **ComparisonTable**
+   - Platform vs traditional investment comparison
+
+9. **Testimonials**
+   - User success stories
+
+10. **SecurityCompliance**
+    - Regulatory compliance information
+
+11. **FAQ**
+    - Common questions and answers
+
+12. **CTASection**
+    - Final conversion point
+
+### Dashboard Components
+
+1. **Navbar**
+   - Variant support (landing/dashboard)
+   - Wallet connection status
+   - Navigation links
+   - Modern DeFi-style design
+
+2. **WalletButton**
+   - Multi-wallet support (HashPack, Blade, Kabila, MetaMask)
+   - Connection status indicator
+   - Account dropdown with quick actions:
+     - Dashboard
+     - Transactions history
+     - My Assets
+     - Settings
+   - HashScan explorer link
+   - Copy address functionality
+   - Disconnect option
+
+3. **WelcomeHeader**
+   - Personalized greeting
+   - Wallet address display
+
+4. **PortfolioOverview**
+   - Total portfolio value
+   - NFT holdings count
+   - Monthly income
+   - Total returns
+   - Performance indicators
+
+5. **QuickActions**
+   - Buy NFT tokens
+   - Transfer assets
+   - Stake tokens
+   - Access marketplace
+
+6. **NFTHoldings**
+   - User's owned NFTs
+   - Asset details per holding
+   - Ownership percentages
+   - Value and performance
+   - Monthly income per asset
+
+7. **MarketActivity**
+   - Recent transactions
+   - Market trends
+   - Active listings
+
+8. **ActiveProposals**
+   - DAO governance proposals
+   - Voting interface
+
+## Wallet Connection System
+
+### Architecture
+
+**Singleton Pattern**: Single HederaWalletConnection instance manages all wallet connections
+
+**WalletConnect Integration**:
+- Project ID required: NEXT_PUBLIC_WALLET_PROJECT_ID
+- Supports Hedera DApp Connector
+- Modal-based wallet selection
+- Session persistence in localStorage
+
+**Connection Flow**:
+1. User clicks "Connect Wallet"
+2. Selects preferred wallet from dropdown
+3. WalletConnect modal opens
+4. User approves in wallet app
+5. Session established with accountId
+6. Connection state saved to localStorage
+
+**Auto-Reconnection**:
+- Checks localStorage on page load
+- Attempts silent reconnection
+- Clears stale data on failure
+
+**Supported Wallets**:
+1. **HashPack** (Recommended)
+   - Hedera native
+   - WalletConnect integration
+   - Always available (doesn't require browser extension)
+
+2. **Blade Wallet**
+   - Hedera native
+   - Browser extension detection
+   - Multi-provider support
+
+3. **Kabila Wallet**
+   - Hedera native
+   - Browser extension detection
+   - Multi-provider support
+
+4. **MetaMask**
+   - EVM compatible
+   - Hedera network switching
+   - Browser extension detection
+
+### Context Provider
+
+**WalletProvider** wraps the entire app:
+- Network configuration (testnet/mainnet)
+- Project ID injection
+- Connection state management
+- Error handling
+
+**useWallet Hook** provides:
+- `walletType`: Current wallet type
+- `account`: User's address
+- `accountId`: Hedera account ID
+- `isConnecting`: Loading state
+- `error`: Error messages
+- `connect(type)`: Connect function
+- `disconnect()`: Disconnect function
+- `isConnected`: Boolean connection status
+
+## Data Flow
+
+### User Investment Journey
+
+1. **Discovery**
+   - Browse asset categories on landing page
+   - View detailed asset information
+   - Check returns and statistics
+
+2. **Authentication**
+   - Connect wallet (HashPack/Blade/Kabila/MetaMask)
+   - Complete KYC verification (if required)
+   - Approve network transactions
+
+3. **Investment**
+   - Select asset to invest in
+   - Choose investment amount
+   - Review fractional ownership percentage
+   - Confirm transaction
+   - Receive NFT to wallet
+
+4. **Management**
+   - View portfolio in dashboard
+   - Track asset performance
+   - Monitor monthly income
+   - Participate in governance votes
+
+5. **Trading**
+   - List NFTs on marketplace
+   - Set sale price
+   - Transfer to other users
+   - Receive royalty payments on resales
+
+## Environment Configuration
+
+### Required Environment Variables
+
+```env
+# Hedera Network Configuration
+NEXT_PUBLIC_HEDERA_NETWORK=testnet
+NEXT_PUBLIC_HEDERA_OPERATOR_ID=0.0.xxxxx
+NEXT_PUBLIC_HEDERA_OPERATOR_KEY=xxxxx
+
+# WalletConnect Configuration
+NEXT_PUBLIC_WALLET_PROJECT_ID=your_walletconnect_project_id
+
+# Optional: Database/Backend
+DATABASE_URL=postgresql://...
+API_URL=https://api.example.com
+```
+
+## Hedera Setup Scripts
+
+Located in `/hedera-setup/scripts/`:
+
+1. **01-create-accounts.ts**
+   - Creates operator account
+   - Creates treasury account
+   - Creates fee collector account
+   - Saves account details to output/accounts.json
+
+2. **02-create-topics.ts**
+   - Creates HCS topics for metadata
+   - One topic per asset category
+   - Saves topic IDs to output/topics.json
+
+3. **03-create-collections.ts**
+   - Creates 3 main NFT collections:
+     - Real Estate NFTs (REALESTATE, 5% royalty)
+     - Agriculture NFTs (AGRINFT, 3% royalty)
+     - Properties NFTs (PROPNFT, 4% royalty)
+   - Generates management keys
+   - Saves to output/collections.json
+
+4. **04-mint-nfts.ts**
+   - Mints NFTs to collections
+   - Uploads metadata to IPFS
+   - Links metadata via HCS
+   - Associates NFTs with owners
+
+5. **05-test-transfer.ts**
+   - Tests NFT transfers
+   - Validates ownership changes
+   - Confirms transaction finality
+
+## Security Considerations
+
+### Key Management
+- Private keys stored securely (never committed to git)
+- output/ directory is gitignored
+- Multi-signature requirements for admin operations
+- Separate treasury and fee collector accounts
+
+### User Protection
+- KYC/AML compliance mechanisms
+- Freeze functionality for suspicious activity
+- Pause functionality for emergency stops
+- Wipe functionality for regulatory compliance
+
+### Smart Contract Security
+- Immutable ownership records
+- Transparent royalty enforcement
+- Built-in Hedera security features
+- No re-entrancy vulnerabilities (Hedera native)
+
+## Performance Optimization
+
+### Frontend
+- Next.js SSR for fast initial load
+- Image optimization
+- Code splitting
+- Lazy loading components
+- Memoized calculations
+
+### Blockchain
+- Hedera's fast consensus (<2s)
+- Low transaction fees (₦0.05 avg)
+- Batch operations where possible
+- Efficient key management
+
+## Monitoring & Analytics
+
+### Platform Metrics
+- Total Value Locked (TVL): ₦45.2B
+- Total Assets: 1,247
+- Active Investors: 12.4K
+- Platform Uptime: 99.9%
+- Transaction Speed: <2s
+- Average Gas Fee: ₦0.05
+
+### User Metrics
+- Portfolio value tracking
+- ROI calculations
+- Monthly income aggregation
+- Asset diversification analysis
+
+## Future Enhancements
+
+### Planned Features
+- Mobile app (iOS/Android)
+- Advanced trading features (limit orders, stop loss)
+- Lending/borrowing against NFT collateral
+- Automated portfolio rebalancing
+- Social trading features
+- Integration with DeFi protocols
+- Fiat on/off ramps
+- Multi-chain support
+
+### Scaling Considerations
+- Hedera handles high throughput natively
+- Sharded data storage
+- CDN for static assets
+- Database optimization
+- Caching strategies
+
+## Business Model
+
+### Revenue Streams
+1. **Transaction Fees**: Small fee on each trade
+2. **Royalties**: Percentage of secondary sales
+3. **Premium Features**: Advanced analytics, priority access
+4. **Management Fees**: Annual fee on AUM (Assets Under Management)
+5. **Listing Fees**: Cost to list new assets
+
+### Value Proposition
+
+**For Investors**:
+- Access to institutional-grade assets
+- Lower minimum investment requirements
+- Instant liquidity vs traditional real estate
+- Transparent ownership and valuation
+- Passive income generation
+- Portfolio diversification
+
+**For Asset Owners**:
+- Unlock liquidity in illiquid assets
+- Access to global investor base
+- Fractional sale without losing control
+- Automated royalty collection
+- Transparent price discovery
+
+## Compliance & Legal
+
+### Regulatory Framework
+- Securities compliance (depending on jurisdiction)
+- KYC/AML procedures
+- Tax reporting mechanisms
+- Data protection (GDPR compliance)
+- Smart contract audits
+- Legal asset custody arrangements
+
+### Jurisdiction Considerations
+- Primary market: Nigeria (Naira)
+- International expansion planned
+- Jurisdiction-specific compliance
+- Cross-border transaction regulations
+
+## Developer Guide
+
+### Project Structure
+
+```
+accelerated/
+├── app/
+│   ├── (dashboard)/     # Dashboard pages
+│   ├── (marketing)/     # Landing pages
+│   ├── globals.css      # Global styles
+│   └── layout.tsx       # Root layout
+├── components/
+│   ├── dashboard/       # Dashboard components
+│   ├── landing/         # Landing page components
+│   ├── shared/          # Shared components (Navbar, WalletButton)
+│   └── ui/              # shadcn/ui components
+├── hooks/
+│   └── use-wallet.tsx   # Wallet connection hook
+├── lib/
+│   ├── env.ts           # Environment validation
+│   ├── hedera-wallet.ts # Hedera WalletConnect integration
+│   ├── logger.ts        # Logging utility
+│   └── utils.ts         # Helper functions
+└── types/
+    └── ethereum.ts      # TypeScript type definitions
+```
+
+### Getting Started
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+2. **Configure Environment**
+   - Copy `.env.example` to `.env.local`
+   - Add your WalletConnect Project ID
+   - Configure Hedera network (testnet/mainnet)
+
+3. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Run Hedera Setup Scripts**
+   ```bash
+   cd hedera-setup
+   npm install
+   npm run create-accounts
+   npm run create-topics
+   npm run create-collections
+   ```
+
+### Coding Standards
+
+- TypeScript strict mode enabled
+- ESLint for code quality
+- Prettier for formatting
+- Component-based architecture
+- Hooks for state management
+- Server components where possible (Next.js 13)
+
+## Support & Documentation
+
+### Resources
+- Hedera Docs: https://docs.hedera.com
+- WalletConnect Docs: https://docs.walletconnect.com
+- HashPack Docs: https://docs.hashpack.app
+- Next.js Docs: https://nextjs.org/docs
+
+### HashScan Explorer
+- Testnet: https://hashscan.io/testnet
+- Mainnet: https://hashscan.io/mainnet
+
+## Conclusion
+
+DeraLinks represents a comprehensive solution for real-world asset tokenization, combining the speed and efficiency of Hedera Hashgraph with a user-friendly interface and robust feature set. The platform democratizes access to high-value assets while maintaining institutional-grade security and compliance standards.
+
+**Target Audience**: 
+- Retail investors seeking portfolio diversification
+- Institutional investors exploring blockchain opportunities
+- Asset owners looking to unlock liquidity
+- Web3 enthusiasts interested in real-world applications
+
+**Competitive Advantages**:
+- Hedera's superior speed and low costs
+- Comprehensive asset category coverage
+- User-friendly interface
+- Strong governance mechanisms
+- Bank-grade security
+- Nigerian market focus with global expansion potential
+
+---
+
+Last Updated: October 27, 2025
+Version: 1.0.0
+Platform: Hedera Testnet/Mainnet
+
+
