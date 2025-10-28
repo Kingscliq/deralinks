@@ -1,0 +1,869 @@
+/* Aave-Inspired Light Theme NFT Marketplace */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Global reset additions */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+body {
+  background: #f7f8fa;
+  color: #1e1e1e;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  background: #f7f8fa;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.App {
+  /* min-height: 100vh; */
+  width: 100%;
+  background: #f7f8fa;
+}
+
+.App.landing {
+  display: grid;
+  grid-template-rows: auto 1fr; /* header + hero */
+  align-items: stretch;
+  text-align: initial;
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden; /* stop scroll on landing */
+  background: linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
+}
+
+.App.main {
+  padding: 0;
+  background: #f7f8fa;
+}
+
+/* Hero Section - Matching Aave Style */
+.hero {
+  margin: 0 auto;
+  max-width: 760px;
+  min-height: calc(100vh - 140px); /* viewport minus header/trust note */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f2f5;
+  color: #1e1e1e;
+  border: 1px solid #e8e9ed;
+  border-radius: 999px;
+  padding: 6px 12px;
+  margin-bottom: 10px; /* tighter top spacing */
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #1e1e1e;
+  margin-bottom: 16px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.hero-subtitle {
+  font-size: 1.125rem;
+  color: #62677b;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 16px auto 32px;
+}
+
+/* Landing sales sections */
+.sales-wrap {
+  width: 100%;
+}
+.sales-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+.section-kicker {
+  color: #62677b;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+.section-title {
+  font-size: 2rem;
+  margin: 8px 0 8px;
+  font-weight: 800;
+}
+.section-footnote {
+  color: #8e92a3;
+  font-size: 0.9rem;
+  margin-top: 12px;
+}
+
+.sales-grid {
+  display: grid;
+  gap: 16px;
+}
+.sales-grid.cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.sales-grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.sales-grid.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stat-card,
+.feature-card,
+.persona-card {
+  background: #ffffff;
+  border: 1px solid #e8e9ed;
+  border-radius: 16px;
+  padding: 20px;
+}
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+.stat-label {
+  color: #62677b;
+  font-weight: 600;
+}
+.stat-note {
+  color: #8e92a3;
+  font-size: 0.85rem;
+}
+
+.feature-icon {
+  font-size: 1.4rem;
+}
+.icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  background-image: radial-gradient(
+    ellipse at 30% 30%,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0)
+  );
+}
+.feature-title {
+  font-weight: 700;
+  margin: 6px 0;
+}
+.feature-desc {
+  color: #62677b;
+  font-size: 0.95rem;
+}
+
+.persona-title {
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.persona-list {
+  margin: 0;
+  padding-left: 16px;
+  color: #62677b;
+}
+.persona-list li {
+  margin: 4px 0;
+}
+.cta-inline {
+  margin-top: 12px;
+  background: #1e1e1e;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cta-inline:hover {
+  background: #000;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.modal-card {
+  background: #fff;
+  border: 1px solid #e8e9ed;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 420px;
+  width: calc(100% - 32px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+.modal-title {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.modal-text {
+  color: #62677b;
+  margin: 0 0 16px;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.faq-list details {
+  background: #ffffff;
+  border: 1px solid #e8e9ed;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+}
+.faq-list summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.faq-list p {
+  color: #62677b;
+  margin: 8px 0 0;
+}
+
+@media (max-width: 900px) {
+  .sales-grid.cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sales-grid.cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .sales-grid.cols-2,
+  .sales-grid.cols-3,
+  .sales-grid.cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animated CTA for landing */
+.cta-animated {
+  background: #1e1e1e;
+  color: #ffffff;
+  border: none;
+  padding: 14px 22px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px rgba(30, 30, 30, 0.2);
+  transform: translateY(0);
+  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+.cta-animated:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(30, 30, 30, 0.28);
+  background: #000000;
+}
+.cta-animated:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 20px rgba(30, 30, 30, 0.2);
+}
+.cta-hint {
+  color: #8e92a3;
+  font-size: 0.9rem;
+}
+
+/* Trust footer-like tiny text under CTA */
+.trust-note {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.trust-note .shield {
+  font-size: 14px;
+  opacity: 0.9;
+}
+.trust-note .trust-text {
+  color: #8e92a3;
+  font-size: 12px;
+}
+
+/* Header - Aave Style */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e8e9ed;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Tooltip for copy feedback */
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.tooltip-bubble {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1e1e;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.account-btn {
+  background: #f7f8fa;
+  border: 1px solid #e8e9ed;
+  color: #1e1e1e;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.account-btn:hover {
+  background: #eceef1;
+  border-color: #d4d7df;
+}
+
+.account-id-display {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #383d51;
+}
+
+.disconnect-btn {
+  background: #1e1e1e; /* match CTA style */
+  border: none;
+  color: #ffffff;
+  padding: 14px 22px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  box-shadow: 0 8px 20px rgba(30, 30, 30, 0.2);
+}
+
+.disconnect-btn:hover {
+  background: #000000;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(30, 30, 30, 0.28);
+}
+
+/* Navigation Tabs - Aave Style */
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 48px;
+  background: #ffffff;
+  border-bottom: 1px solid #e8e9ed;
+}
+
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: #62677b;
+  padding: 18px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+.nav-tab:hover {
+  color: #1e1e1e;
+  background: #fafbfc;
+}
+
+.nav-tab.active {
+  color: #1e1e1e;
+  border-bottom-color: #1e1e1e;
+  background: transparent;
+}
+
+/* Main Content */
+.main-content {
+  padding: 48px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Section Headers */
+.section-header {
+  margin-bottom: 40px;
+}
+
+.section-header h2 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  color: #62677b;
+  font-size: 1.125rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* NFT Grid */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+/* NFT Card - Aave Style */
+.nft-card {
+  background: #ffffff;
+  border: 1px solid #e8e9ed;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.nft-card:hover {
+  transform: translateY(-4px);
+  border-color: #1e1e1e;
+  box-shadow: 0 12px 32px rgba(30, 30, 30, 0.12);
+}
+
+.nft-image {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+}
+
+.nft-content {
+  padding: 24px;
+}
+
+.nft-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.nft-description {
+  font-size: 0.95rem;
+  color: #62677b;
+  margin: 0 0 20px 0;
+  line-height: 1.6;
+}
+
+.nft-attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.attribute-badge {
+  background: #f7f8fa;
+  color: #383d51;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #e8e9ed;
+}
+
+.nft-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #fafbfc;
+  border-radius: 12px;
+  border: 1px solid #e8e9ed;
+}
+
+.price-label {
+  color: #62677b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.price-value {
+  color: #1e1e1e;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.nft-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.list-btn {
+  background: #ffffff;
+  color: #1e1e1e;
+  border: 2px solid #1e1e1e;
+}
+
+.list-btn:hover {
+  background: #1e1e1e;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.buy-btn {
+  background: #1e1e1e;
+  color: #ffffff;
+  border: 2px solid #1e1e1e;
+}
+
+.buy-btn:hover {
+  background: #383d51;
+  border-color: #383d51;
+  transform: translateY(-2px);
+}
+
+.listed-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f8fa;
+  color: #62677b;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid #e8e9ed;
+}
+
+/* Mint Form */
+.mint-form-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.mint-form-container h2 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin-bottom: 40px;
+  letter-spacing: -0.02em;
+}
+
+.mint-form {
+  background: #ffffff;
+  border: 1px solid #e8e9ed;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.form-group {
+  margin-bottom: 28px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group label {
+  display: block;
+  color: #1e1e1e;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e8e9ed;
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: #1e1e1e;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.form-group select {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e8e9ed;
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: #1e1e1e;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1e1e1e;
+  box-shadow: 0 0 0 3px rgba(30, 30, 30, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #a5aab7;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.submit-btn {
+  width: 100%;
+  background: #1e1e1e;
+  color: #ffffff;
+  padding: 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #383d51;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(30, 30, 30, 0.2);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Drag & drop zones */
+.dropzone {
+  width: 100%;
+  min-height: 120px;
+  border: 2px dashed #d7dae1;
+  border-radius: 12px;
+  background: #fafbfc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #62677b;
+  cursor: pointer;
+}
+.dropzone.dragover {
+  border-color: #1e1e1e;
+  background: #f4f5f7;
+}
+.dropzone-preview {
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: 8px;
+}
+.hint {
+  display: block;
+  color: #8e92a3;
+  margin: 8px 0 10px 0;
+  font-size: 0.85rem;
+}
+
+/* States */
+.loading {
+  text-align: center;
+  padding: 80px 20px;
+  color: #62677b;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #62677b;
+  font-size: 1.125rem;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+/* Connect Button Override */
+.MyButton {
+  background: #1e1e1e;
+  color: white;
+  padding: 18px 48px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.MyButton:hover {
+  background: #383d51;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(30, 30, 30, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .nft-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .hero {
+    min-height: calc(100vh - 120px);
+  }
+
+  .hero-subtitle {
+    font-size: 1.125rem;
+  }
+
+  .app-header {
+    padding: 20px 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-tabs {
+    padding: 0 24px;
+    overflow-x: auto;
+  }
+
+  .main-content {
+    padding: 32px 24px;
+  }
+
+  .section-header h2 {
+    font-size: 2rem;
+  }
+
+  .nft-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .mint-form {
+    padding: 28px;
+  }
+}
