@@ -1,0 +1,3 @@
+base = "app-react-version"
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "build"
