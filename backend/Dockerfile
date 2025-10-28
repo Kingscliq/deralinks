@@ -35,26 +35,23 @@ CMD ["npm", "run", "dev"]
 
 # Builder stage - compile TypeScript
 FROM base AS builder
-ENV NODE_ENV=production
 
 # Copy package files
 COPY package*.json ./
 
 # Install ALL dependencies (including dev dependencies like TypeScript)
-# This is needed to compile TypeScript to JavaScript
+# IMPORTANT: Do NOT set NODE_ENV=production before this, or devDependencies will be skipped!
 RUN npm install && \
     npm cache clean --force
-
-# Verify TypeScript is installed
-RUN ls -la node_modules/.bin/ | grep tsc || echo "TypeScript not found!"
 
 # Copy source code
 COPY . .
 
-# Build TypeScript using node_modules/.bin/tsc directly
-RUN node_modules/.bin/tsc
+# Build TypeScript
+RUN npm run build
 
-# Now install only production dependencies for the final image
+# Now set production environment and prune dev dependencies
+ENV NODE_ENV=production
 RUN npm prune --production
 
 # Production stage
