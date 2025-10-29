@@ -34,7 +34,7 @@ export const fetchNFTTransfers = async (
 ): Promise<NFTTransferEvent[]> => {
   try {
     // Correct Hedera Mirror Node API endpoint for token transactions
-    let url = `${MIRROR_NODE_URL}/api/v1/transactions?token.id=${tokenId}&transactiontype=CRYPTOTRANSFER&order=asc&limit=100`;
+    let url = `${MIRROR_NODE_URL}/api/v1/transactions?token.id=${tokenId}&type=CRYPTOTRANSFER&order=asc&limit=100`;
 
     if (fromTimestamp) {
       url += `&timestamp=gt:${fromTimestamp}`;
