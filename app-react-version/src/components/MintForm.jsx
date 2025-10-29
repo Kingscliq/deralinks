@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { useNotification } from '../context/NotificationContext.jsx';
+
 const MintForm = ({ onMint, accountId }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -11,6 +13,9 @@ const MintForm = ({ onMint, accountId }) => {
     appraisalDate: '',
     custodian: '',
     fractions: 1000,
+    expectedAnnualReturn: '10',
+    rentalYield: '6',
+    distributionFrequency: 'monthly',
   });
 
   const [loading, setLoading] = useState(false);
@@ -19,6 +24,7 @@ const MintForm = ({ onMint, accountId }) => {
   const [imageDrag, setImageDrag] = useState(false);
   const [docFiles, setDocFiles] = useState([]); // optional supporting documents
   const [docDrag, setDocDrag] = useState(false);
+  const { showNotification } = useNotification();
 
   const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,33 +42,65 @@ const MintForm = ({ onMint, accountId }) => {
     setDocFiles(prev => [...prev, ...Array.from(files)]);
   };
 
+  const parseNumeric = value => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = Number(String(value).replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
 
+    if (!accountId) {
+      showNotification({
+        type: 'error',
+        title: 'Wallet required',
+        message: 'Connect your wallet before tokenizing an asset.',
+      });
+      setLoading(false);
+      return;
+    }
+
+    const valuationValue = parseNumeric(formData.valuation);
+    const fractionsValue = Number(formData.fractions) || 0;
+    const tokenPrice =
+      valuationValue && fractionsValue
+        ? Number((valuationValue / fractionsValue).toFixed(2))
+        : undefined;
+
+    const selectedImage =
+      formData.image ||
+      `https://via.placeholder.com/600x400/${Math.floor(
+        Math.random() * 16777215
+      ).toString(16)}/ffffff?text=${encodeURIComponent(
+        formData.name || 'Asset'
+      )}`;
+
     const payload = {
       name: formData.name,
       description: formData.description,
-      image:
-        imagePreview ||
-        formData.image ||
-        `https://via.placeholder.com/600x400/${Math.floor(
-          Math.random() * 16777215
-        ).toString(16)}/ffffff?text=${encodeURIComponent(
-          formData.name || 'Asset'
-        )}`,
+      image: selectedImage,
       metadata: {
         creator: accountId,
+        collection: `${formData.name || 'Asset'} Collection`,
         assetType: formData.assetType,
         location: formData.location,
         appraisalDate: formData.appraisalDate,
         custodian: formData.custodian,
-        fractions: Number(formData.fractions) || 0,
+        fractions: fractionsValue,
+        images: [selectedImage],
+        totalValue: valuationValue,
+        tokenPrice,
+        expectedAnnualReturn: parseNumeric(formData.expectedAnnualReturn),
+        rentalYield: parseNumeric(formData.rentalYield),
+        distributionFrequency: formData.distributionFrequency,
       },
       attributes: {
-        valuation: formData.valuation || '',
+        valuation: valuationValue,
         documentsAttached: docFiles.length,
       },
+      documents: docFiles.map(file => file.name),
       royaltyFee: 5,
     };
 
@@ -79,6 +117,9 @@ const MintForm = ({ onMint, accountId }) => {
       appraisalDate: '',
       custodian: '',
       fractions: 1000,
+      expectedAnnualReturn: '10',
+      rentalYield: '6',
+      distributionFrequency: 'monthly',
     });
     setImageFile(null);
     setImagePreview('');
@@ -215,6 +256,33 @@ const MintForm = ({ onMint, accountId }) => {
 
         <div className="form-row">
           <div className="form-group">
+            <label>Expected annual return (%)</label>
+            <input
+              type="number"
+              name="expectedAnnualReturn"
+              value={formData.expectedAnnualReturn}
+              onChange={handleChange}
+              min="0"
+              step="0.1"
+              placeholder="e.g. 10"
+            />
+          </div>
+          <div className="form-group">
+            <label>Rental yield (%)</label>
+            <input
+              type="number"
+              name="rentalYield"
+              value={formData.rentalYield}
+              onChange={handleChange}
+              min="0"
+              step="0.1"
+              placeholder="e.g. 6"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
             <label>Custodian / Holder</label>
             <input
               type="text"
@@ -234,6 +302,19 @@ const MintForm = ({ onMint, accountId }) => {
               min="1"
               placeholder="e.g. 1000"
             />
+          </div>
+          <div className="form-group">
+            <label>Distribution frequency</label>
+            <select
+              name="distributionFrequency"
+              value={formData.distributionFrequency}
+              onChange={handleChange}
+            >
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="semiannual">Semiannual</option>
+              <option value="annual">Annual</option>
+            </select>
           </div>
         </div>
 
