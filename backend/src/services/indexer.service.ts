@@ -26,49 +26,59 @@ interface HCSMessage {
 }
 
 /**
- * Fetch NFT transfers for a specific token from Mirror Node
+ * Fetch NFT list with current owners for a token from Mirror Node
+ * This gives us the current state of all NFTs and their owners
  */
-export const fetchNFTTransfers = async (
-  tokenId: string,
-  fromTimestamp?: string
-): Promise<NFTTransferEvent[]> => {
+export const fetchNFTList = async (
+  tokenId: string
+): Promise<Array<{ serial_number: number; account_id: string }>> => {
   try {
-    // Correct Hedera Mirror Node API endpoint for token transactions
-    let url = `${MIRROR_NODE_URL}/api/v1/transactions?token.id=${tokenId}&type=CRYPTOTRANSFER&order=asc&limit=100`;
+    let url = `${MIRROR_NODE_URL}/api/v1/tokens/${tokenId}/nfts?limit=100`;
+    const allNFTs: Array<{ serial_number: number; account_id: string }> = [];
 
-    if (fromTimestamp) {
-      url += `&timestamp=gt:${fromTimestamp}`;
-    }
+    // Handle pagination
+    while (url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Mirror Node API error ${response.status} for URL: ${url}`);
+        console.error(`Response body: ${errorText}`);
+        throw new Error(`Mirror Node API error: ${response.status} - ${errorText}`);
+      }
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Mirror Node API error: ${response.status}`);
-    }
+      const data: any = await response.json();
 
-    const data: any = await response.json();
-    const transfers: NFTTransferEvent[] = [];
-
-    // Parse transactions for NFT transfers
-    (data.transactions || []).forEach((tx: any) => {
-      (tx.nft_transfers || []).forEach((transfer: any) => {
-        if (transfer.token_id === tokenId) {
-          transfers.push({
-            token_id: transfer.token_id,
-            serial_number: transfer.serial_number,
-            sender_account_id: transfer.sender_account_id,
-            receiver_account_id: transfer.receiver_account_id,
-            consensus_timestamp: tx.consensus_timestamp,
-            transaction_id: tx.transaction_id,
+      // Extract NFT serial numbers and current owners
+      (data.nfts || []).forEach((nft: any) => {
+        if (nft.account_id && nft.serial_number) {
+          allNFTs.push({
+            serial_number: nft.serial_number,
+            account_id: nft.account_id,
           });
         }
       });
-    });
 
-    return transfers;
+      // Check for next page
+      url = data.links?.next ? `${MIRROR_NODE_URL}${data.links.next}` : '';
+    }
+
+    return allNFTs;
   } catch (error: any) {
-    console.error('Error fetching NFT transfers:', error);
+    console.error('Error fetching NFT list:', error);
     throw error;
   }
+};
+
+/**
+ * Legacy function - kept for backward compatibility but not actively used
+ * Use fetchNFTList() instead for better performance
+ */
+export const fetchNFTTransfers = async (
+  _tokenId: string,
+  _fromTimestamp?: string
+): Promise<NFTTransferEvent[]> => {
+  console.warn('fetchNFTTransfers is deprecated. The Mirror Node API does not support querying all transfers by token ID directly. Use fetchNFTList() instead.');
+  return [];
 };
 
 /**
@@ -107,60 +117,39 @@ export const fetchTopicMessages = async (
 };
 
 /**
- * Sync NFT transfers to database
+ * Sync NFT holdings to database by checking current state from Mirror Node
+ * This syncs the current ownership state rather than historical transfers
  */
 export const syncNFTTransfers = async (tokenId: string): Promise<number> => {
   try {
-    // Get last synced timestamp from database
-    const lastSyncQuery = `
-      SELECT MAX(hedera_timestamp) as last_timestamp
-      FROM nft_transfers
-      WHERE token_id = $1
-    `;
-    const lastSyncResult = await query(lastSyncQuery, [tokenId]);
-    const lastTimestamp = lastSyncResult.rows[0]?.last_timestamp;
+    console.log(`🔄 Syncing NFT holdings for token ${tokenId}...`);
 
-    // Fetch new transfers from Mirror Node
-    const transfers = await fetchNFTTransfers(tokenId, lastTimestamp);
+    // Fetch current NFT ownership from Mirror Node
+    const nftList = await fetchNFTList(tokenId);
 
-    if (transfers.length === 0) {
-      console.log(`No new transfers for token ${tokenId}`);
+    if (nftList.length === 0) {
+      console.log(`ℹ️  No NFTs found for token ${tokenId}`);
       return 0;
     }
 
-    // Insert transfers into database
-    for (const transfer of transfers) {
-      await query(
-        `INSERT INTO nft_transfers (
-          token_id, from_account, to_account, serial_numbers,
-          quantity, status, hedera_transaction_id, hedera_timestamp, completed_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        ON CONFLICT (hedera_transaction_id) DO NOTHING`,
-        [
-          transfer.token_id,
-          transfer.sender_account_id,
-          transfer.receiver_account_id,
-          [transfer.serial_number],
-          1,
-          'completed',
-          transfer.transaction_id,
-          transfer.consensus_timestamp,
-          new Date(parseFloat(transfer.consensus_timestamp) * 1000),
-        ]
-      );
+    console.log(`📊 Found ${nftList.length} NFTs for token ${tokenId}`);
 
-      // Update nft_holdings
+    let updatedCount = 0;
+
+    // Update holdings for each NFT
+    for (const nft of nftList) {
       await updateNFTHoldings(
-        transfer.token_id,
-        transfer.serial_number,
-        transfer.receiver_account_id
+        tokenId,
+        nft.serial_number,
+        nft.account_id
       );
+      updatedCount++;
     }
 
-    console.log(`✅ Synced ${transfers.length} NFT transfers for token ${tokenId}`);
-    return transfers.length;
+    console.log(`✅ Synced ${updatedCount} NFT holdings for token ${tokenId}`);
+    return updatedCount;
   } catch (error: any) {
-    console.error('Error syncing NFT transfers:', error);
+    console.error('Error syncing NFT holdings:', error);
     throw error;
   }
 };
@@ -283,6 +272,7 @@ export const syncAllProperties = async (): Promise<void> => {
 };
 
 export default {
+  fetchNFTList,
   fetchNFTTransfers,
   fetchTopicMessages,
   syncNFTTransfers,
