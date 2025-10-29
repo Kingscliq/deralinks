@@ -1,6 +1,7 @@
 import './styles/App.css';
 
 import React, { useState } from 'react';
+import { buildHoldingFromMint, mintNFT } from './api/mockApi';
 
 import AssetDetails from './components/AssetDetails.jsx';
 import ConnectPrompt from './components/ui/ConnectPrompt.jsx';
@@ -12,7 +13,7 @@ import Marketplace from './components/Marketplace.jsx';
 import MintForm from './components/MintForm.jsx';
 import MyAssets from './components/MyAssets.jsx';
 import MyGroup from './components/MyGroup.jsx';
-import { mintNFT } from './api/mockApi';
+import MyListings from './components/MyListings.jsx';
 import walletConnectFcn from './components/hedera/walletConnect.js';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
 
   const [connectTextSt, setConnectTextSt] = useState('🔌 Connect here...');
   const [connectLinkSt, setConnectLinkSt] = useState('');
+  const [localHoldings, setLocalHoldings] = useState([]);
 
   async function connectWallet() {
     if (accountId !== undefined) {
@@ -47,10 +49,19 @@ function App() {
   const handleMint = async payload => {
     const response = await mintNFT(payload);
     if (response.success) {
-      alert('NFT minted successfully!');
+      const mintedHolding = buildHoldingFromMint(payload, response.data);
+      if (mintedHolding) {
+        setLocalHoldings(prev => {
+          const filtered = prev.filter(
+            item => item.tokenId !== mintedHolding.tokenId
+          );
+          return [mintedHolding, ...filtered];
+        });
+      }
+      alert(response.message || 'NFT minted successfully!');
       setActiveTab('my-assets');
     } else {
-      alert('Failed to mint NFT');
+      alert(`Failed to mint NFT: ${response.error}`);
     }
   };
 
@@ -84,6 +95,7 @@ function App() {
     setWalletData(undefined);
     setConnectTextSt('🔌 Connect here...');
     setConnectLinkSt('');
+    setLocalHoldings([]);
     setActiveTab('marketplace');
   };
 
@@ -131,6 +143,12 @@ function App() {
           My Assets
         </button>
         <button
+          className={`nav-tab ${activeTab === 'my-listings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('my-listings')}
+        >
+          My Listings
+        </button>
+        <button
           className={`nav-tab ${activeTab === 'mint' ? 'active' : ''}`}
           onClick={() => setActiveTab('mint')}
         >
@@ -152,7 +170,12 @@ function App() {
             {activeTab === 'marketplace' && (
               <Marketplace accountId={accountId} />
             )}
-            {activeTab === 'my-assets' && <MyAssets accountId={accountId} />}
+            {activeTab === 'my-assets' && (
+              <MyAssets accountId={accountId} localHoldings={localHoldings} />
+            )}
+            {activeTab === 'my-listings' && (
+              <MyListings accountId={accountId} />
+            )}
             {activeTab === 'mint' && (
               <MintForm onMint={handleMint} accountId={accountId} />
             )}
