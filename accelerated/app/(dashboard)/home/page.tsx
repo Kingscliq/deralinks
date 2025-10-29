@@ -1,13 +1,13 @@
 'use client';
 
+import ActiveProposals from '@/components/dashboard/ActiveProposals';
 import Link from 'next/link';
+import MarketActivity from '@/components/dashboard/MarketActivity';
+import NFTHoldings from '@/components/dashboard/NFTHoldings';
 import Navbar from '@/components/shared/Navbar';
-import WelcomeHeader from '@/components/dashboard/WelcomeHeader';
 import PortfolioOverview from '@/components/dashboard/PortfolioOverview';
 import QuickActions from '@/components/dashboard/QuickActions';
-import NFTHoldings from '@/components/dashboard/NFTHoldings';
-import ActiveProposals from '@/components/dashboard/ActiveProposals';
-import MarketActivity from '@/components/dashboard/MarketActivity';
+import WelcomeHeader from '@/components/dashboard/WelcomeHeader';
 
 export default function DashboardHomePage() {
   return (
@@ -36,7 +36,8 @@ export default function DashboardHomePage() {
             Discover More Opportunities
           </h3>
           <p className="text-slate-400 mb-6">
-            Explore our marketplace to find premium assets matching your investment goals
+            Explore our marketplace to find premium assets matching your
+            investment goals
           </p>
           <Link
             href="/marketplace"

@@ -14,8 +14,14 @@ import SecurityCompliance from '@/components/landing/SecurityCompliance';
 import FAQ from '@/components/landing/FAQ';
 import CTASection from '@/components/landing/CTASection';
 import LandingFooter from '@/components/landing/LandingFooter';
+import { useEffect } from 'react';
+import { validateEnv } from '@/lib/env';
 
 export default function LandingPage() {
+
+  useEffect(() => {
+    validateEnv();
+  }, []);
   return (
     <main className="min-h-screen bg-slate-950">
       <Navbar variant="landing" />

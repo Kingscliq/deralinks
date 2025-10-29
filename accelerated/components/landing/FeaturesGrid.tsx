@@ -1,53 +1,73 @@
 'use client';
 
-import { PieChart, Shield, Vote, Zap, Lock, BarChart3, Globe, Bot } from 'lucide-react';
+import {
+  BarChart3,
+  Bot,
+  Globe,
+  Lock,
+  PieChart,
+  Shield,
+  Vote,
+  Zap,
+} from 'lucide-react';
 
 export default function FeaturesGrid() {
   const features = [
     {
       title: 'Fractional Ownership',
-      description: 'Own portions of high-value assets starting from ₦10,000. Break down barriers to premium investments.',
+      description:
+        'Own portions of high-value assets starting from ₦10,000. Break down barriers to premium investments.',
       icon: <PieChart className="w-6 h-6" />,
     },
     {
       title: 'NFT-Based Proof',
-      description: 'Each token is a unique NFT with immutable ownership records on Hedera blockchain.',
+      description:
+        'Each token is a unique NFT with immutable ownership records on Hedera blockchain.',
       icon: <Shield className="w-6 h-6" />,
     },
     {
       title: 'DAO Governance',
-      description: 'Participate in asset management decisions through decentralized voting. Your voice matters.',
+      description:
+        'Participate in asset management decisions through decentralized voting. Your voice matters.',
       icon: <Vote className="w-6 h-6" />,
     },
     {
       title: 'Instant Liquidity',
-      description: 'Trade tokens 24/7 on secondary markets without traditional transaction delays.',
+      description:
+        'Trade tokens 24/7 on secondary markets without traditional transaction delays.',
       icon: <Zap className="w-6 h-6" />,
     },
     {
       title: 'Bank-Grade Security',
-      description: 'Multi-signature wallets and institutional-grade custody protect your investments.',
+      description:
+        'Multi-signature wallets and institutional-grade custody protect your investments.',
       icon: <Lock className="w-6 h-6" />,
     },
     {
       title: 'Real-Time Analytics',
-      description: 'Track performance, income, and portfolio diversification with live dashboards.',
+      description:
+        'Track performance, income, and portfolio diversification with live dashboards.',
       icon: <BarChart3 className="w-6 h-6" />,
     },
     {
       title: 'Global Access',
-      description: 'Invest in assets worldwide. KYC-compliant cross-border transactions.',
+      description:
+        'Invest in assets worldwide. KYC-compliant cross-border transactions.',
       icon: <Globe className="w-6 h-6" />,
     },
     {
       title: 'AI Valuation',
-      description: 'Machine learning models provide accurate, real-time asset valuations.',
+      description:
+        'Machine learning models provide accurate, real-time asset valuations.',
       icon: <Bot className="w-6 h-6" />,
     },
   ];
 
   return (
-    <section className="py-24 sm:py-32 bg-slate-950 relative overflow-hidden">
+    <section
+      id="features"
+      className="py-24 sm:py-32 bg-slate-950 relative overflow-hidden scroll-mt-20"
+    >
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>

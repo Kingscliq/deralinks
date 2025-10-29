@@ -1,13 +1,24 @@
 'use client';
 
-import { Building2, Gem, Palette, Car, Factory, TreePine, Landmark, Zap } from 'lucide-react';
+import {
+  Building2,
+  Car,
+  Factory,
+  Gem,
+  Landmark,
+  Palette,
+  TreePine,
+  Zap,
+} from 'lucide-react';
+
 import { Card } from '@/components/ui/card';
 
 export default function AssetCategories() {
   const categories = [
     {
       title: 'Real Estate',
-      description: 'Commercial properties, residential complexes, and premium land holdings',
+      description:
+        'Commercial properties, residential complexes, and premium land holdings',
       icon: <Building2 className="w-8 h-8" />,
       totalValue: '₦18.5B',
       assets: 542,
@@ -80,7 +91,10 @@ export default function AssetCategories() {
   ];
 
   return (
-    <section className="py-24 sm:py-32 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900">
+    <section
+      id="assets"
+      className="py-24 sm:py-32 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 scroll-mt-20"
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-20">
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6">
@@ -100,7 +114,9 @@ export default function AssetCategories() {
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
               <div className="relative p-6">
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <div
+                  className={`w-16 h-16 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                >
                   {category.icon}
                 </div>
 
@@ -115,15 +131,21 @@ export default function AssetCategories() {
                 <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-700/50">
                   <div>
                     <div className="text-xs text-slate-500 mb-1">Value</div>
-                    <div className="text-sm font-semibold text-white">{category.totalValue}</div>
+                    <div className="text-sm font-semibold text-white">
+                      {category.totalValue}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500 mb-1">Assets</div>
-                    <div className="text-sm font-semibold text-white">{category.assets}</div>
+                    <div className="text-sm font-semibold text-white">
+                      {category.assets}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500 mb-1">Return</div>
-                    <div className="text-sm font-semibold text-green-400">{category.avgReturn}</div>
+                    <div className="text-sm font-semibold text-green-400">
+                      {category.avgReturn}
+                    </div>
                   </div>
                 </div>
               </div>

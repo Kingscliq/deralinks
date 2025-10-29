@@ -10,6 +10,17 @@ interface NavbarProps {
   variant?: 'landing' | 'dashboard';
 }
 
+const handleSmoothScroll = (
+  e: React.MouseEvent<HTMLAnchorElement>,
+  targetId: string
+) => {
+  e.preventDefault();
+  const element = document.getElementById(targetId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
 export default function Navbar({ variant = 'landing' }: NavbarProps) {
   if (variant === 'dashboard') {
     return (
@@ -52,25 +63,29 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
           <div className="hidden md:flex items-center gap-8">
             <a
               href="#features"
-              className="text-slate-300 hover:text-white transition-colors"
+              onClick={e => handleSmoothScroll(e, 'features')}
+              className="text-slate-300 hover:text-white transition-colors cursor-pointer"
             >
               Features
             </a>
             <a
               href="#assets"
-              className="text-slate-300 hover:text-white transition-colors"
+              onClick={e => handleSmoothScroll(e, 'assets')}
+              className="text-slate-300 hover:text-white transition-colors cursor-pointer"
             >
               Assets
             </a>
             <a
               href="#how-it-works"
-              className="text-slate-300 hover:text-white transition-colors"
+              onClick={e => handleSmoothScroll(e, 'how-it-works')}
+              className="text-slate-300 hover:text-white transition-colors cursor-pointer"
             >
               How It Works
             </a>
             <a
               href="#faq"
-              className="text-slate-300 hover:text-white transition-colors"
+              onClick={e => handleSmoothScroll(e, 'faq')}
+              className="text-slate-300 hover:text-white transition-colors cursor-pointer"
             >
               FAQ
             </a>

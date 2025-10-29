@@ -1,41 +1,48 @@
 'use client';
 
-import { FileCheck, Coins, ShoppingCart, Vote } from 'lucide-react';
+import { Coins, FileCheck, ShoppingCart, Vote } from 'lucide-react';
 
 export default function HowItWorks() {
   const steps = [
     {
       number: '01',
       title: 'Submit Asset',
-      description: 'Upload documentation and property details. Our AI-powered system verifies authenticity and performs market valuation.',
+      description:
+        'Upload documentation and property details. Our AI-powered system verifies authenticity and performs market valuation.',
       icon: <FileCheck className="w-7 h-7" />,
       gradient: 'from-blue-600 to-cyan-600',
     },
     {
       number: '02',
       title: 'NFT Minting',
-      description: 'Asset is tokenized into fractional NFTs on Hedera blockchain. Each token represents verifiable ownership rights.',
+      description:
+        'Asset is tokenized into fractional NFTs on Hedera blockchain. Each token represents verifiable ownership rights.',
       icon: <Coins className="w-7 h-7" />,
       gradient: 'from-purple-600 to-pink-600',
     },
     {
       number: '03',
       title: 'List & Trade',
-      description: 'Tokens are listed on our marketplace. Investors can purchase fractions with instant liquidity and 24/7 trading.',
+      description:
+        'Tokens are listed on our marketplace. Investors can purchase fractions with instant liquidity and 24/7 trading.',
       icon: <ShoppingCart className="w-7 h-7" />,
       gradient: 'from-green-600 to-emerald-600',
     },
     {
       number: '04',
       title: 'Govern & Earn',
-      description: 'Token holders vote on asset decisions through DAO governance and receive automated rental income distributions.',
+      description:
+        'Token holders vote on asset decisions through DAO governance and receive automated rental income distributions.',
       icon: <Vote className="w-7 h-7" />,
       gradient: 'from-orange-600 to-red-600',
     },
   ];
 
   return (
-    <section className="py-24 sm:py-32 bg-slate-950 relative overflow-hidden">
+    <section
+      id="how-it-works"
+      className="py-24 sm:py-32 bg-slate-950 relative overflow-hidden scroll-mt-20"
+    >
       <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 opacity-50"></div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -57,7 +64,9 @@ export default function HowItWorks() {
                     {step.number}
                   </div>
 
-                  <div className={`mt-6 mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div
+                    className={`mt-6 mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                  >
                     {step.icon}
                   </div>
 
@@ -86,7 +95,9 @@ export default function HowItWorks() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
             </span>
-            <span className="text-sm text-slate-300">Average tokenization time: 48-72 hours</span>
+            <span className="text-sm text-slate-300">
+              Average tokenization time: 48-72 hours
+            </span>
           </div>
         </div>
       </div>

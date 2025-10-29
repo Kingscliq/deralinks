@@ -111,7 +111,7 @@ export const createListing = async (
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id, seller_hedera_account, token_id, serial_numbers,
                 quantity, price_per_nft, total_price, currency,
-                status, listed_at, expires_at
+                status, created_at, expires_at
     `;
 
     const quantity = serialNumbers.length;
@@ -148,7 +148,7 @@ export const createListing = async (
         totalPrice: parseFloat(listing.total_price),
         currency: listing.currency,
         status: listing.status,
-        listedAt: listing.listed_at,
+        listedAt: listing.created_at,
         expiresAt: listing.expires_at,
       },
     });
@@ -168,7 +168,7 @@ export const createListing = async (
 export const getListings = async (
   req: Request,
   res: Response<GetListingsResponse | { success: false; error: any }>
-) => {
+): Promise<any> => {
   try {
     const {
       tokenId,
@@ -194,7 +194,7 @@ export const getListings = async (
         l.total_price,
         l.currency,
         l.status,
-        l.listed_at,
+        l.created_at,
         l.expires_at,
         p.id as property_id,
         p.property_name,
@@ -260,7 +260,7 @@ export const getListings = async (
     }
 
     // Add ordering and pagination
-    queryText += ` ORDER BY l.listed_at DESC`;
+    queryText += ` ORDER BY l.created_at DESC`;
 
     paramCount++;
     queryText += ` LIMIT $${paramCount}`;
@@ -352,7 +352,7 @@ export const getListings = async (
       features: row.features || {},
       amenities: row.amenities || [],
       status: row.status,
-      listedAt: row.listed_at,
+      listedAt: row.created_at,
       expiresAt: row.expires_at,
     }));
 
