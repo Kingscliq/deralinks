@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { getAssetsByWallet, listAsset } from '../api/mockApi';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { getAssetsByWallet, getProperties, listAsset } from '../api/mockApi';
 
 import NFTCard from './NFTCard';
+import { useNotification } from '../context/NotificationContext.jsx';
 
 const parseAmount = value => {
   if (value === undefined || value === null || value === '') return 0;
@@ -28,18 +29,49 @@ const buildFallbackSummary = holdings => {
   };
 };
 
-const mergeHoldings = (apiHoldings, localHoldings) => {
+const mergeHoldings = (...holdingsLists) => {
   const map = new Map();
-  (localHoldings || []).forEach(item => {
-    if (item?.tokenId) {
-      map.set(item.tokenId, item);
-    }
+
+  holdingsLists.forEach(list => {
+    (list || []).forEach(item => {
+      if (!item?.tokenId) return;
+
+      const existing = map.get(item.tokenId) || {};
+      const nextSerials =
+        Array.isArray(item.serialNumbers) && item.serialNumbers.length
+          ? item.serialNumbers
+          : existing.serialNumbers;
+
+      const mergedMetadata = {
+        ...(existing.metadata || {}),
+        ...(item.metadata || {}),
+      };
+
+      const mergedAttributes = {
+        ...(existing.attributes || {}),
+        ...(item.attributes || {}),
+      };
+
+      const mergedProperty = {
+        ...(existing.property || {}),
+        ...(item.property || {}),
+      };
+
+      map.set(item.tokenId, {
+        ...existing,
+        ...item,
+        metadata: mergedMetadata,
+        attributes: mergedAttributes,
+        property: mergedProperty,
+        serialNumbers: nextSerials,
+        quantity:
+          item.quantity !== undefined && item.quantity !== null
+            ? item.quantity
+            : existing.quantity,
+      });
+    });
   });
-  (apiHoldings || []).forEach(item => {
-    if (item?.tokenId) {
-      map.set(item.tokenId, item);
-    }
-  });
+
   return Array.from(map.values());
 };
 
@@ -52,36 +84,87 @@ const formatMetricValue = value => {
 const MyAssets = ({ accountId, localHoldings = [] }) => {
   const [assets, setAssets] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [creatorAssets, setCreatorAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
-  useEffect(() => {
-    loadAssets();
-  }, [accountId]);
-
-  const loadAssets = async () => {
+  const loadAssets = useCallback(async () => {
     if (!accountId) {
       setAssets([]);
+      setCreatorAssets([]);
       setSummary(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    const response = await getAssetsByWallet(accountId);
-    if (response.success) {
-      setAssets(response.data?.holdings || []);
-      setSummary(response.data?.summary || null);
-    } else {
+
+    try {
+      const [holdingsResponse, propertiesResponse] = await Promise.all([
+        getAssetsByWallet(accountId),
+        getProperties({
+          status: 'active',
+          limit: 100,
+          ownerAccountId: accountId,
+        }),
+      ]);
+
+      if (holdingsResponse.success) {
+        setAssets(holdingsResponse.data?.holdings || []);
+        setSummary(holdingsResponse.data?.summary || null);
+      } else {
+        setAssets([]);
+        setSummary(null);
+        showNotification({
+          type: 'error',
+          title: 'Unable to load assets',
+          message: holdingsResponse.error || 'Failed to fetch your assets.',
+        });
+      }
+
+      if (propertiesResponse.success) {
+        const ownedProperties = (propertiesResponse.data || []).filter(
+          asset => {
+            const ownerId = asset?.ownerHederaAccount || asset?.owner;
+            return ownerId && ownerId.toString() === accountId.toString();
+          }
+        );
+        setCreatorAssets(ownedProperties);
+      } else {
+        setCreatorAssets([]);
+        if (propertiesResponse.error) {
+          console.warn(
+            'Unable to load minted properties:',
+            propertiesResponse.error
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error loading assets', error);
       setAssets([]);
+      setCreatorAssets([]);
       setSummary(null);
-      alert('Failed to fetch your assets: ' + response.error);
+      showNotification({
+        type: 'error',
+        title: 'Unable to load assets',
+        message: 'An unexpected error occurred while fetching your assets.',
+      });
     }
+
     setLoading(false);
-  };
+  }, [accountId, showNotification]);
+
+  useEffect(() => {
+    loadAssets();
+  }, [loadAssets]);
 
   const handleList = async asset => {
     if (!asset?.serialNumbers || asset.serialNumbers.length === 0) {
-      alert('No NFT serial numbers available for this asset.');
+      showNotification({
+        type: 'error',
+        title: 'Listing unavailable',
+        message: 'No NFT serial numbers available for this asset.',
+      });
       return;
     }
 
@@ -89,7 +172,11 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
     if (priceInput === null) return;
     const pricePerNFT = Number(priceInput);
     if (!Number.isFinite(pricePerNFT) || pricePerNFT <= 0) {
-      alert('Invalid price');
+      showNotification({
+        type: 'error',
+        title: 'Invalid price',
+        message: 'Enter a valid price per NFT greater than zero.',
+      });
       return;
     }
 
@@ -101,15 +188,39 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
     if (quantityInput === null) return;
     const quantity = Number(quantityInput);
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      alert('Invalid quantity');
+      showNotification({
+        type: 'error',
+        title: 'Invalid quantity',
+        message: 'Enter a quantity greater than zero.',
+      });
       return;
     }
     if (quantity > maxQuantity) {
-      alert('Quantity exceeds owned NFTs for this property.');
+      showNotification({
+        type: 'error',
+        title: 'Quantity too high',
+        message: 'Quantity exceeds owned NFTs for this property.',
+      });
       return;
     }
 
     const serialNumbers = asset.serialNumbers.slice(0, quantity);
+
+    const expiresInput = prompt(
+      'How many days should the listing remain active? (default 30)',
+      '30'
+    );
+    if (expiresInput === null) return;
+    const expiresValue = expiresInput.trim();
+    const expiresInDays = Number(expiresValue === '' ? 30 : expiresValue);
+    if (!Number.isFinite(expiresInDays) || expiresInDays <= 0) {
+      showNotification({
+        type: 'error',
+        title: 'Invalid duration',
+        message: 'Enter a valid number of days greater than zero.',
+      });
+      return;
+    }
 
     const payload = {
       sellerHederaAccount: accountId,
@@ -122,20 +233,30 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
       description:
         asset.description ||
         `Listing ${quantity} NFTs from ${asset.name || asset.tokenId}`,
+      expiresInDays,
     };
 
     const response = await listAsset(payload);
     if (response.success) {
-      alert(response.message || 'Asset listed successfully!');
-      loadAssets();
+      showNotification({
+        type: 'success',
+        title: 'Listing created',
+        message: response.message || 'Asset listed successfully!',
+        autoClose: 4000,
+      });
+      await loadAssets();
     } else {
-      alert('Failed to list asset: ' + response.error);
+      showNotification({
+        type: 'error',
+        title: 'Listing failed',
+        message: response.error || 'Failed to list asset on marketplace.',
+      });
     }
   };
 
   const mergedAssets = useMemo(
-    () => mergeHoldings(assets, localHoldings),
-    [assets, localHoldings]
+    () => mergeHoldings(creatorAssets, assets, localHoldings),
+    [creatorAssets, assets, localHoldings]
   );
 
   const summaryToShow = useMemo(() => {

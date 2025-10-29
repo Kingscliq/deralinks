@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { useNotification } from '../context/NotificationContext.jsx';
+
 const MintForm = ({ onMint, accountId }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -22,6 +24,7 @@ const MintForm = ({ onMint, accountId }) => {
   const [imageDrag, setImageDrag] = useState(false);
   const [docFiles, setDocFiles] = useState([]); // optional supporting documents
   const [docDrag, setDocDrag] = useState(false);
+  const { showNotification } = useNotification();
 
   const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -50,7 +53,11 @@ const MintForm = ({ onMint, accountId }) => {
     setLoading(true);
 
     if (!accountId) {
-      alert('Connect your wallet before tokenizing an asset.');
+      showNotification({
+        type: 'error',
+        title: 'Wallet required',
+        message: 'Connect your wallet before tokenizing an asset.',
+      });
       setLoading(false);
       return;
     }

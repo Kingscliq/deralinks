@@ -1,3 +1,4 @@
+import { DEFAULT_IMAGE } from '../api/mockApi';
 import React from 'react';
 
 const NFTCard = ({ asset, onList, onBuy, onView, showActions = true }) => {
@@ -37,13 +38,7 @@ const NFTCard = ({ asset, onList, onBuy, onView, showActions = true }) => {
       onClick={() => onView && onView(asset)}
       style={{ cursor: onView ? 'pointer' : 'default' }}
     >
-      <img
-        src={
-          asset?.image || 'https://via.placeholder.com/400x300?text=DeraLinks'
-        }
-        alt={asset?.name}
-        className="nft-image"
-      />
+      <img src={DEFAULT_IMAGE} alt={asset?.name} className="nft-image" />
       <div className="nft-content">
         <h3 className="nft-name">{asset?.name}</h3>
         <p className="nft-description">{asset?.description}</p>
@@ -82,6 +77,7 @@ const NFTCard = ({ asset, onList, onBuy, onView, showActions = true }) => {
                 className="action-btn list-btn"
                 onClick={e => {
                   e.stopPropagation();
+                  console.log({ asset });
                   onList(asset);
                 }}
               >

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DEFAULT_IMAGE =
+export const DEFAULT_IMAGE =
     'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80';
 
 const API_BASE_URL = (() => {
@@ -51,20 +51,77 @@ const cleanNumeric = value => {
 
 const normalizeImage = value => {
     if (!value) return DEFAULT_IMAGE;
+
+    const normalizeString = input => {
+        if (!input) return DEFAULT_IMAGE;
+        const trimmed = input.trim();
+        if (!trimmed) return DEFAULT_IMAGE;
+
+        const parsed = tryParseJson(trimmed);
+        if (Array.isArray(parsed) || (parsed && typeof parsed === 'object')) {
+            const nested = normalizeImage(parsed);
+            if (nested && nested !== DEFAULT_IMAGE) return nested;
+        }
+
+        if (trimmed.startsWith('data:image')) return trimmed;
+        if (trimmed.startsWith('http')) return trimmed;
+
+        const candidate = trimmed.replace(/^ipfs:\/\//, '').replace(/^ipfs\//, '');
+        if (!candidate) return DEFAULT_IMAGE;
+        if (candidate.startsWith('http')) return candidate;
+        return `https://gateway.pinata.cloud/ipfs/${candidate}`;
+    };
+
     if (Array.isArray(value)) {
-        const first = value.find(Boolean);
-        return normalizeImage(first);
+        for (const item of value) {
+            const normalized = normalizeImage(item);
+            if (normalized && normalized !== DEFAULT_IMAGE) {
+                return normalized;
+            }
+        }
+        return DEFAULT_IMAGE;
     }
-    if (typeof value !== 'string') return DEFAULT_IMAGE;
-    const parsed = tryParseJson(value);
-    if (Array.isArray(parsed)) {
-        return normalizeImage(parsed);
+
+    if (typeof value === 'object') {
+        const candidateKeys = [
+            'url',
+            'href',
+            'src',
+            'image',
+            'preview',
+            'original',
+            'path',
+            'link',
+            'thumbnail',
+        ];
+
+        for (const key of candidateKeys) {
+            if (value[key]) {
+                const normalized = normalizeImage(value[key]);
+                if (normalized && normalized !== DEFAULT_IMAGE) {
+                    return normalized;
+                }
+            }
+        }
+
+        const cidKeys = ['cid', 'CID', 'hash', 'ipfsHash', 'ipfs', 'contentId'];
+        for (const key of cidKeys) {
+            if (value[key]) {
+                const normalized = normalizeImage(String(value[key]));
+                if (normalized && normalized !== DEFAULT_IMAGE) {
+                    return normalized;
+                }
+            }
+        }
+
+        return DEFAULT_IMAGE;
     }
-    if (typeof parsed === 'string' && parsed.startsWith('http')) return parsed;
-    const candidate = typeof parsed === 'string' ? parsed : value;
-    if (candidate.startsWith('http')) return candidate;
-    const trimmed = candidate.replace(/^ipfs:\/\//, '').replace(/^ipfs\//, '');
-    return trimmed ? `https://gateway.pinata.cloud/ipfs/${trimmed}` : DEFAULT_IMAGE;
+
+    if (typeof value === 'string') {
+        return normalizeString(value);
+    }
+
+    return DEFAULT_IMAGE;
 };
 
 const formatDisplayValue = value => {
@@ -284,6 +341,96 @@ const mapHolding = holding => {
     };
 };
 
+const mapProperty = property => {
+    if (!property) return null;
+
+    const tokenId = property?.tokenId || property?.token_id;
+    if (!tokenId) return null;
+
+    const owner = property?.ownerHederaAccount || property?.owner_hedera_account;
+    const totalSupplyRaw = property?.total_supply ?? property?.totalSupply;
+    const totalSupply = Number.isFinite(Number(totalSupplyRaw))
+        ? Number(totalSupplyRaw)
+        : undefined;
+    const availableSupplyRaw =
+        property?.available_supply ?? property?.availableSupply;
+    const availableSupply = Number.isFinite(Number(availableSupplyRaw))
+        ? Number(availableSupplyRaw)
+        : undefined;
+
+    const images = ensureArray(property?.images);
+    const documents = ensureArray(property?.documents);
+    const features = ensureObject(property?.features);
+    const amenities = ensureArray(property?.amenities);
+
+    const tokenPrice = cleanNumeric(
+        property?.token_price ?? property?.tokenPrice
+    );
+    const valuation = cleanNumeric(
+        property?.total_value ?? property?.totalValue
+    );
+
+    return {
+        id: property?.id || tokenId,
+        tokenId,
+        serialNumbers: [],
+        quantity:
+            availableSupply !== undefined
+                ? availableSupply
+                : totalSupply !== undefined
+                    ? totalSupply
+                    : undefined,
+        name:
+            property?.property_name ||
+            property?.collection_name ||
+            tokenId,
+        description: property?.description,
+        image: normalizeImage(images.length ? images : undefined),
+        metadata: {
+            assetType:
+                property?.property_type || property?.propertyType,
+            location: [property?.city, property?.country]
+                .filter(Boolean)
+                .join(', '),
+            expectedAnnualReturn: toPercent(
+                property?.expected_annual_return ??
+                property?.expectedAnnualReturn
+            ),
+            rentalYield: toPercent(
+                property?.rental_yield ?? property?.rentalYield
+            ),
+            fractions: totalSupply,
+            collection: property?.collection_name,
+        },
+        attributes: {
+            valuation: formatDisplayValue(
+                valuation ?? property?.total_value ?? property?.totalValue
+            ),
+            tokenPrice: formatDisplayValue(tokenPrice),
+            quantity:
+                availableSupply !== undefined
+                    ? availableSupply
+                    : totalSupply,
+        },
+        property: {
+            ...property,
+            images,
+            documents,
+            features,
+            amenities,
+        },
+        price: tokenPrice,
+        priceCurrency: 'USD',
+        owner,
+        ownerHederaAccount: owner,
+        status: property?.status,
+        createdAt: property?.created_at ?? property?.createdAt,
+        updatedAt: property?.updated_at ?? property?.updatedAt,
+        isListed: false,
+        isCreatorAsset: true,
+    };
+};
+
 const mapListing = listing => {
     const property = listing?.property || {};
     const images = ensureArray(property?.images || listing?.images);
@@ -380,6 +527,50 @@ export const getAssetsByWallet = async accountId => {
             data: {
                 summary,
                 holdings,
+            },
+        };
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const getProperties = async (filters = {}) => {
+    try {
+        const {
+            ownerAccountId,
+            ownerHederaAccount,
+            ...queryParams
+        } = filters || {};
+
+        const { data } = await api.get('/properties', {
+            params: queryParams,
+        });
+
+        const payload = data?.data || {};
+        const properties = Array.isArray(payload?.properties)
+            ? payload.properties
+                .map(mapProperty)
+                .filter(Boolean)
+            : [];
+
+        const ownerFilter = ownerHederaAccount || ownerAccountId;
+        const filteredProperties = ownerFilter
+            ? properties.filter(asset => {
+                const ownerId = asset?.ownerHederaAccount || asset?.owner;
+                return (
+                    ownerId &&
+                    ownerId.toString().toLowerCase() ===
+                    ownerFilter.toString().toLowerCase()
+                );
+            })
+            : properties;
+
+        return {
+            success: true,
+            data: filteredProperties,
+            meta: {
+                total: payload?.count ?? filteredProperties.length,
+                returned: filteredProperties.length,
             },
         };
     } catch (error) {

@@ -1,5 +1,9 @@
 import './styles/App.css';
 
+import {
+  NotificationProvider,
+  useNotification,
+} from './context/NotificationContext.jsx';
 import React, { useState } from 'react';
 import { buildHoldingFromMint, mintNFT } from './api/mockApi';
 
@@ -16,7 +20,7 @@ import MyGroup from './components/MyGroup.jsx';
 import MyListings from './components/MyListings.jsx';
 import walletConnectFcn from './components/hedera/walletConnect.js';
 
-function App() {
+function AppContent() {
   const [walletData, setWalletData] = useState();
   const [accountId, setAccountId] = useState();
   const [walletConnected, setWalletConnected] = useState(false);
@@ -26,6 +30,7 @@ function App() {
   const [connectTextSt, setConnectTextSt] = useState('🔌 Connect here...');
   const [connectLinkSt, setConnectLinkSt] = useState('');
   const [localHoldings, setLocalHoldings] = useState([]);
+  const { showNotification } = useNotification();
 
   async function connectWallet() {
     if (accountId !== undefined) {
@@ -58,10 +63,19 @@ function App() {
           return [mintedHolding, ...filtered];
         });
       }
-      alert(response.message || 'NFT minted successfully!');
+      showNotification({
+        type: 'success',
+        title: 'Mint Successful',
+        message: response.message || 'NFT minted successfully!',
+        autoClose: 4000,
+      });
       setActiveTab('my-assets');
     } else {
-      alert(`Failed to mint NFT: ${response.error}`);
+      showNotification({
+        type: 'error',
+        title: 'Mint failed',
+        message: response.error || 'Failed to mint NFT collection.',
+      });
     }
   };
 
@@ -187,5 +201,11 @@ function App() {
 
   return walletConnected ? <MainPage /> : <LandingPage />;
 }
+
+const App = () => (
+  <NotificationProvider>
+    <AppContent />
+  </NotificationProvider>
+);
 
 export default App;

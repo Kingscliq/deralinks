@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { buyAsset, getAllListedAssets } from '../api/mockApi';
 
 import NFTCard from './NFTCard';
+import { useNotification } from '../context/NotificationContext.jsx';
 
 const Marketplace = ({ accountId }) => {
   const [listings, setListings] = useState([]);
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     loadListings();
@@ -21,7 +23,11 @@ const Marketplace = ({ accountId }) => {
     } else {
       setListings([]);
       setMeta(null);
-      alert('Failed to load marketplace: ' + response.error);
+      showNotification({
+        type: 'error',
+        title: 'Marketplace unavailable',
+        message: response.error || 'Failed to load marketplace listings.',
+      });
     }
     setLoading(false);
   };
@@ -42,7 +48,11 @@ const Marketplace = ({ accountId }) => {
 
   const handleBuy = async asset => {
     if (!accountId) {
-      alert('Connect your wallet to purchase assets.');
+      showNotification({
+        type: 'error',
+        title: 'Wallet required',
+        message: 'Connect your wallet to purchase assets.',
+      });
       return;
     }
 
@@ -57,11 +67,19 @@ const Marketplace = ({ accountId }) => {
 
     const quantity = Number(quantityInput);
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      alert('Invalid quantity.');
+      showNotification({
+        type: 'error',
+        title: 'Invalid quantity',
+        message: 'Enter a quantity greater than zero.',
+      });
       return;
     }
     if (quantity > availableQuantity) {
-      alert('Quantity exceeds available NFTs in this listing.');
+      showNotification({
+        type: 'error',
+        title: 'Quantity too high',
+        message: 'Quantity exceeds available NFTs in this listing.',
+      });
       return;
     }
 
@@ -78,10 +96,19 @@ const Marketplace = ({ accountId }) => {
       paymentMethod: asset.priceCurrency === 'HBAR' ? 'HBAR' : 'USD',
     });
     if (response.success) {
-      alert(response.message || 'Purchase successful!');
+      showNotification({
+        type: 'success',
+        title: 'Purchase successful',
+        message: response.message || 'Purchase initiated successfully!',
+        autoClose: 4000,
+      });
       loadListings();
     } else {
-      alert('Purchase failed: ' + response.error);
+      showNotification({
+        type: 'error',
+        title: 'Purchase failed',
+        message: response.error || 'Failed to complete purchase.',
+      });
     }
   };
 
