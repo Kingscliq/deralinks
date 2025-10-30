@@ -54,4 +54,10 @@ const upload = multer({
 export const uploadSingle = upload.single('file');
 export const uploadMultiple = upload.array('files', 10);
 
+// For property creation: images and documents
+export const uploadPropertyFiles = upload.fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'documents', maxCount: 5 }
+]);
+
 export default upload;

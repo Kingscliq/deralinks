@@ -6,7 +6,7 @@
 import { Request, Response } from 'express';
 import { query } from '../config/database';
 import { createPropertyCollection } from '../services/hedera.service';
-import { uploadJSON } from '../services/ipfs.service';
+import { uploadFile, uploadJSON } from '../services/ipfs.service';
 import type { MintPropertyRequest, MintPropertyResponse } from '../types/api.types';
 
 // POST /api/v1/properties/mint
@@ -43,6 +43,11 @@ export const mintProperty = async (
       royaltyPercentage = 5,
     } = req.body;
 
+    // Handle uploaded files from multipart/form-data
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const imageFiles = files?.images || [];
+    const documentFiles = files?.documents || [];
+
     // Validation
     if (!ownerHederaAccount || !propertyName || !collectionName || !collectionSymbol) {
       return res.status(400).json({
@@ -66,7 +71,46 @@ export const mintProperty = async (
     //   });
     // }
 
-    // Step 1: Create full metadata JSON
+    // Step 1: Upload images to IPFS
+    console.log(`📸 Uploading ${imageFiles.length} image(s) to IPFS...`);
+    const imageUrls: string[] = [];
+
+    if (imageFiles.length > 0) {
+      for (const file of imageFiles) {
+        const cid = await uploadFile(file.buffer, file.originalname);
+        const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+        imageUrls.push(gatewayUrl);
+        console.log(`✅ Uploaded ${file.originalname} → ${cid}`);
+      }
+    } else if (images && Array.isArray(images)) {
+      // Fallback: accept pre-uploaded URLs from body (for backward compatibility)
+      imageUrls.push(...images);
+    }
+
+    // Step 2: Upload documents to IPFS
+    console.log(`📄 Uploading ${documentFiles.length} document(s) to IPFS...`);
+    const documentUrls: string[] = [];
+
+    if (documentFiles.length > 0) {
+      for (const file of documentFiles) {
+        const cid = await uploadFile(file.buffer, file.originalname);
+        const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+        documentUrls.push(gatewayUrl);
+        console.log(`✅ Uploaded ${file.originalname} → ${cid}`);
+      }
+    } else if (documents && Array.isArray(documents)) {
+      // Fallback: accept pre-uploaded documents from body (for backward compatibility)
+      // Documents can be objects {name, cid, type} or strings (URLs)
+      documents.forEach((doc: any) => {
+        if (typeof doc === 'string') {
+          documentUrls.push(doc);
+        } else if (doc.cid) {
+          documentUrls.push(`https://gateway.pinata.cloud/ipfs/${doc.cid}`);
+        }
+      });
+    }
+
+    // Step 3: Create full metadata JSON
     const metadata = {
       name: propertyName,
       description: description || '',
@@ -93,8 +137,8 @@ export const mintProperty = async (
       },
       features: features || {},
       amenities: amenities || [],
-      images: images || [],
-      documents: documents || [],
+      images: imageUrls,
+      documents: documentUrls,
       createdAt: new Date().toISOString(),
     };
 
@@ -155,8 +199,8 @@ export const mintProperty = async (
       totalSupply, // available_supply initially equals total_supply
       description || null,
       metadataCID,
-      JSON.stringify(images || []),
-      JSON.stringify(documents || []),
+      JSON.stringify(imageUrls),
+      JSON.stringify(documentUrls),
       JSON.stringify(features || {}),
       amenities || [],
       expectedAnnualReturn || null,
@@ -187,6 +231,10 @@ export const mintProperty = async (
         metadata: {
           metadataCID,
           metadataUrl: `https://gateway.pinata.cloud/ipfs/${metadataCID}`,
+        },
+        media: {
+          images: imageUrls,
+          documents: documentUrls,
         },
         hedera: {
           transactionId: hederaResult.transactionId,

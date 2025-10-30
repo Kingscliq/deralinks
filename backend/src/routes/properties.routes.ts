@@ -10,11 +10,12 @@ import {
   updateProperty,
   verifyPropertyDocuments,
 } from '../controllers/properties.controller';
+import { uploadPropertyFiles } from '../middleware/upload.middleware';
 
 const router = Router();
 
-// POST /api/v1/properties/mint
-router.post('/mint', mintProperty);
+// POST /api/v1/properties/mint - Accepts multipart/form-data with images and documents
+router.post('/mint', uploadPropertyFiles, mintProperty);
 
 // GET /api/v1/properties - List all properties with filters
 router.get('/', listProperties);
