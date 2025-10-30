@@ -1,26 +1,25 @@
 import express, { Application, Request, Response } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import compression from 'compression';
-import dotenv from 'dotenv';
-import { initDatabase, testConnection, getPool } from './config/database';
-import { runMigrations } from './database/migrate';
+import { getPool, initDatabase, testConnection } from './config/database';
+// Services
+import { gracefulShutdown, startAllJobs } from './services/scheduler.service';
 
+import adminRoutes from './routes/admin.routes';
+import compression from 'compression';
+import cors from 'cors';
+import daoRoutes from './routes/dao.routes';
+import dotenv from 'dotenv';
+import filesRoutes from './routes/files.routes';
+import helmet from 'helmet';
+import investorsRoutes from './routes/investors.routes';
+import marketplaceRoutes from './routes/marketplace.routes';
+import morgan from 'morgan';
 // Route imports
 import propertiesRoutes from './routes/properties.routes';
+import propertyOwnersRoutes from './routes/property-owners.routes';
+import { runMigrations } from './database/migrate';
 import tokensRoutes from './routes/tokens.routes';
 import usersRoutes from './routes/users.routes';
-import investorsRoutes from './routes/investors.routes';
-import propertyOwnersRoutes from './routes/property-owners.routes';
-import marketplaceRoutes from './routes/marketplace.routes';
-import filesRoutes from './routes/files.routes';
-import adminRoutes from './routes/admin.routes';
 import verificationRoutes from './routes/verification.routes';
-import daoRoutes from './routes/dao.routes';
-
-// Services
-import { startAllJobs, gracefulShutdown } from './services/scheduler.service';
 
 // Load environment variables
 dotenv.config();
@@ -37,7 +36,7 @@ app.use(helmet());
 
 // CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3600',
+  origin: process.env.NODE_ENV === 'production' ? process.env.CORS_ORIGIN : 'http://localhost:3600',
   credentials: true
 }));
 
