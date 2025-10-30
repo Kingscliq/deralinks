@@ -48,6 +48,16 @@ export const mintProperty = async (
     const imageFiles = files?.images || [];
     const documentFiles = files?.documents || [];
 
+    // Parse numeric fields (multipart/form-data sends everything as strings)
+    const parsedTotalSupply = typeof totalSupply === 'string' ? parseInt(totalSupply, 10) : totalSupply;
+    const parsedTotalValue = typeof totalValue === 'string' ? parseFloat(totalValue) : totalValue;
+    const parsedTokenPrice = typeof tokenPrice === 'string' ? parseFloat(tokenPrice) : tokenPrice;
+    const parsedLatitude = latitude ? (typeof latitude === 'string' ? parseFloat(latitude) : latitude) : undefined;
+    const parsedLongitude = longitude ? (typeof longitude === 'string' ? parseFloat(longitude) : longitude) : undefined;
+    const parsedAnnualReturn = expectedAnnualReturn ? (typeof expectedAnnualReturn === 'string' ? parseFloat(expectedAnnualReturn) : expectedAnnualReturn) : undefined;
+    const parsedRentalYield = rentalYield ? (typeof rentalYield === 'string' ? parseFloat(rentalYield) : rentalYield) : undefined;
+    const parsedRoyaltyPercentage = royaltyPercentage ? (typeof royaltyPercentage === 'string' ? parseFloat(royaltyPercentage) : royaltyPercentage) : 5;
+
     // Validation
     if (!ownerHederaAccount || !propertyName || !collectionName || !collectionSymbol) {
       return res.status(400).json({
@@ -122,17 +132,17 @@ export const mintProperty = async (
         state: state || '',
         country,
         zipCode: zipCode || '',
-        coordinates: latitude && longitude ? {
-          latitude,
-          longitude,
+        coordinates: parsedLatitude && parsedLongitude ? {
+          latitude: parsedLatitude,
+          longitude: parsedLongitude,
         } : undefined,
       },
       financial: {
-        totalValue,
-        tokenPrice,
-        totalSupply,
-        expectedAnnualReturn: expectedAnnualReturn || 0,
-        rentalYield: rentalYield || 0,
+        totalValue: parsedTotalValue,
+        tokenPrice: parsedTokenPrice,
+        totalSupply: parsedTotalSupply,
+        expectedAnnualReturn: parsedAnnualReturn || 0,
+        rentalYield: parsedRentalYield || 0,
         distributionFrequency: distributionFrequency || '',
       },
       features: features || {},
@@ -156,18 +166,18 @@ export const mintProperty = async (
       collectionSymbol,
       treasuryAccount,
       feeCollectorAccount,
-      royaltyPercentage,
-      totalSupply,
+      royaltyPercentage: parsedRoyaltyPercentage,
+      totalSupply: parsedTotalSupply,
     });
 
     // Step 4: Mint NFTs to treasury
-    console.log(`🪙 Minting ${totalSupply} NFT(s) to treasury...`);
-    const metadataCIDs = Array(totalSupply).fill(metadataCID);
+    console.log(`🪙 Minting ${parsedTotalSupply} NFT(s) to treasury...`);
+    const metadataCIDs = Array(parsedTotalSupply).fill(metadataCID);
 
     const mintResult = await mintNFTsToTreasury({
       tokenId: hederaResult.tokenId,
       supplyKey: hederaResult.supplyKey,
-      quantity: totalSupply,
+      quantity: parsedTotalSupply,
       metadataCIDs,
     });
 
@@ -204,20 +214,20 @@ export const mintProperty = async (
       state || null,
       country,
       zipCode || null,
-      latitude || null,
-      longitude || null,
-      totalValue,
-      tokenPrice,
-      totalSupply,
-      totalSupply, // available_supply initially equals total_supply
+      parsedLatitude || null,
+      parsedLongitude || null,
+      parsedTotalValue,
+      parsedTokenPrice,
+      parsedTotalSupply,
+      parsedTotalSupply, // available_supply initially equals total_supply
       description || null,
       metadataCID,
       JSON.stringify(imageUrls),
       JSON.stringify(documentUrls),
       JSON.stringify(features || {}),
       amenities || [],
-      expectedAnnualReturn || null,
-      rentalYield || null,
+      parsedAnnualReturn || null,
+      parsedRentalYield || null,
       distributionFrequency || null,
       hederaResult.hcsTopicId,
       'active',
@@ -238,8 +248,8 @@ export const mintProperty = async (
         tokenId: hederaResult.tokenId,
         collectionName,
         collectionSymbol,
-        totalSupply,
-        tokenPrice,
+        totalSupply: parsedTotalSupply,
+        tokenPrice: parsedTokenPrice,
         hcsTopicId: hederaResult.hcsTopicId,
         metadata: {
           metadataCID,
