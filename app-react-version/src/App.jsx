@@ -10,13 +10,11 @@ import { buildHoldingFromMint, mintNFT } from './api/mockApi';
 import AssetDetails from './components/AssetDetails.jsx';
 import ConnectPrompt from './components/ui/ConnectPrompt.jsx';
 import Header from './components/ui/Header.jsx';
-import Hero from './components/ui/Hero.jsx';
 import LandingHero from './components/ui/LandingHero.jsx';
 import LandingSales from './components/ui/LandingSales.jsx';
 import Marketplace from './components/Marketplace.jsx';
 import MintForm from './components/MintForm.jsx';
 import MyAssets from './components/MyAssets.jsx';
-import MyGroup from './components/MyGroup.jsx';
 import MyListings from './components/MyListings.jsx';
 import walletConnectFcn from './components/hedera/walletConnect.js';
 
@@ -129,7 +127,6 @@ function AppContent() {
 
   const [routeAsset, setRouteAsset] = useState(null);
 
-  // Simple hash-based route for details: #/asset?tokenId=...&serialNumber=...
   React.useEffect(() => {
     const parse = () => {
       const hash = window.location.hash || '';
