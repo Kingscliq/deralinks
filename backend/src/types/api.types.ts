@@ -108,8 +108,13 @@ export interface MintPropertyResponse {
       images: string[]; // Array of IPFS gateway URLs for images
       documents: string[]; // Array of IPFS gateway URLs for documents
     };
+    nfts: {
+      mintedCount: number; // Number of NFTs minted
+      serialNumbers: number[]; // Array of serial numbers (e.g., [1, 2, 3, ..., 1000])
+      mintTransactionId: string; // Transaction ID for the minting operation
+    };
     hedera: {
-      transactionId: string; // Hedera transaction ID
+      transactionId: string; // Hedera transaction ID (collection creation)
       timestamp: string; // ISO timestamp
       explorerUrl: string; // HashScan URL
     };
