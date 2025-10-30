@@ -71,12 +71,26 @@ function AppContent() {
       });
       setActiveTab('my-assets');
     } else {
+      const rawMessage =
+        response?.error?.message ||
+        response?.error ||
+        'Failed to mint NFT collection.';
+
+      const normalizedMessage = rawMessage.toString();
+      const formattedMessage = normalizedMessage.includes(
+        'INSUFFICIENT_PAYER_BALANCE'
+      )
+        ? 'Mint failed: the payer account does not have enough HBAR to cover network fees. Please fund the treasury/operator account and try again.'
+        : normalizedMessage;
+
       showNotification({
         type: 'error',
         title: 'Mint failed',
-        message: response.error || 'Failed to mint NFT collection.',
+        message: formattedMessage,
       });
     }
+
+    return response;
   };
 
   const LandingPage = () => (
