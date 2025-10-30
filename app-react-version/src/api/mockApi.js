@@ -13,7 +13,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 15000,
+    timeout: 1500000,
 });
 
 const tryParseJson = value => {
@@ -489,7 +489,9 @@ const handleApiError = error => {
 
 export const mintNFT = async payload => {
     try {
-        const requestBody = buildMintPayload(payload);
+        const requestBody = payload?.ownerHederaAccount
+            ? payload
+            : buildMintPayload(payload);
         const { data } = await api.post('/properties/mint', requestBody);
         return {
             success: data?.success ?? true,
@@ -572,6 +574,113 @@ export const getProperties = async (filters = {}) => {
                 total: payload?.count ?? filteredProperties.length,
                 returned: filteredProperties.length,
             },
+        };
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+const normalizeUploadedFile = (entry, fallbackName) => {
+    if (!entry) return null;
+
+    const cid =
+        entry.cid ||
+        entry.CID ||
+        entry.hash ||
+        entry.ipfsHash ||
+        entry.ipfs ||
+        entry.contentId;
+
+    const directUrl =
+        entry.gatewayUrl ||
+        entry.ipfsUrl ||
+        entry.url ||
+        entry.href ||
+        entry.src ||
+        entry.path;
+    const url = directUrl || (cid ? `https://gateway.pinata.cloud/ipfs/${cid}` : undefined);
+
+    const name = entry.fileName || entry.name || fallbackName || null;
+    const size = entry.fileSize || entry.size || null;
+    const type = entry.mimeType || entry.type || null;
+
+    return {
+        cid: cid || null,
+        url: url || null,
+        name,
+        size,
+        type,
+        gatewayUrl: entry.gatewayUrl || null,
+        ipfsUrl: entry.ipfsUrl || null,
+    };
+};
+
+export const uploadFileToIPFS = async file => {
+    if (!file) {
+        return {
+            success: false,
+            error: 'No file provided for upload',
+        };
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const { data } = await api.post('/files/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        const rawEntry = data?.data || data;
+        const normalized = normalizeUploadedFile(rawEntry, file.name);
+
+        return {
+            success: data?.success ?? true,
+            data: normalized,
+            message: data?.message,
+        };
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const uploadMultipleFilesToIPFS = async files => {
+    const fileArray = Array.from(files || []).filter(Boolean);
+
+    if (!fileArray.length) {
+        return {
+            success: false,
+            error: 'No files provided for upload',
+        };
+    }
+
+    try {
+        const formData = new FormData();
+        fileArray.forEach(file => formData.append('files', file));
+
+        const { data } = await api.post('/files/upload-multiple', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        const rawFiles = data?.data?.files || data?.data || [];
+        const normalizedFiles = Array.isArray(rawFiles)
+            ? rawFiles.map((entry, index) => normalizeUploadedFile(entry, fileArray[index]?.name))
+            : [];
+
+        return {
+            success: data?.success ?? true,
+            data: {
+                files: normalizedFiles,
+                count:
+                    data?.data?.count ??
+                    data?.data?.totalFiles ??
+                    normalizedFiles.length,
+            },
+            message: data?.message,
         };
     } catch (error) {
         return handleApiError(error);
@@ -661,50 +770,97 @@ export const buyAsset = async ({
 export const buildHoldingFromMint = (payload, result = {}) => {
     if (!payload) return null;
 
-    const location = parseLocation(payload?.metadata?.location);
-    const amenities = ensureArray(payload?.metadata?.amenities);
-    const features = ensureObject(payload?.metadata?.features);
-    const valuation = cleanNumeric(payload?.attributes?.valuation);
-    const tokenPrice = cleanNumeric(payload?.metadata?.tokenPrice);
-    const fractions = Number(payload?.metadata?.fractions) || 0;
-    const images = ensureArray(payload?.metadata?.images).concat(ensureArray(payload?.image));
+    const isContractPayload = !!payload?.ownerHederaAccount;
+
+    if (!isContractPayload) {
+        const location = parseLocation(payload?.metadata?.location);
+        const amenities = ensureArray(payload?.metadata?.amenities);
+        const features = ensureObject(payload?.metadata?.features);
+        const valuation = cleanNumeric(payload?.attributes?.valuation);
+        const tokenPrice = cleanNumeric(payload?.metadata?.tokenPrice);
+        const fractions = Number(payload?.metadata?.fractions) || 0;
+        const images = ensureArray(payload?.metadata?.images).concat(ensureArray(payload?.image));
+
+        return {
+            id: result?.propertyId || payload?.metadata?.collection,
+            tokenId: result?.tokenId,
+            serialNumbers: [],
+            quantity: fractions,
+            name: payload?.name,
+            description: payload?.description,
+            image: normalizeImage(images.length ? images : undefined),
+            metadata: {
+                assetType: mapAssetType(payload?.metadata?.assetType),
+                location: [location.city, location.country].filter(Boolean).join(', '),
+                fractions,
+                expectedAnnualReturn: toPercent(payload?.metadata?.expectedAnnualReturn),
+                rentalYield: toPercent(payload?.metadata?.rentalYield),
+                appraisalDate: payload?.metadata?.appraisalDate,
+                custodian: payload?.metadata?.custodian,
+            },
+            attributes: {
+                valuation: formatDisplayValue(valuation),
+                tokenPrice: formatDisplayValue(tokenPrice),
+                quantity: fractions,
+            },
+            price: tokenPrice,
+            priceCurrency: 'USD',
+            property: {
+                totalValue: valuation,
+                totalSupply: fractions,
+                amenities,
+                features,
+                images,
+                city: location.city,
+                country: location.country,
+                description: payload?.description,
+            },
+            isListed: false,
+            status: 'draft',
+        };
+    }
+
+    const images = ensureArray(payload.images);
+    const features = ensureObject(payload.features);
+    const amenities = ensureArray(payload.amenities);
+    const valuation = cleanNumeric(payload.totalValue);
+    const tokenPrice = cleanNumeric(payload.tokenPrice);
+    const locationLabel = [payload.city, payload.country].filter(Boolean).join(', ');
 
     return {
-        id: result?.propertyId || payload?.metadata?.collection,
+        id: result?.propertyId || payload?.collectionName,
         tokenId: result?.tokenId,
         serialNumbers: [],
-        quantity: fractions,
-        name: payload?.name,
-        description: payload?.description,
+        quantity: Number(payload.totalSupply) || 0,
+        name: payload.propertyName,
+        description: payload.description,
         image: normalizeImage(images.length ? images : undefined),
         metadata: {
-            assetType: mapAssetType(payload?.metadata?.assetType),
-            location: [location.city, location.country].filter(Boolean).join(', '),
-            fractions,
-            expectedAnnualReturn: toPercent(payload?.metadata?.expectedAnnualReturn),
-            rentalYield: toPercent(payload?.metadata?.rentalYield),
-            appraisalDate: payload?.metadata?.appraisalDate,
-            custodian: payload?.metadata?.custodian,
+            assetType: payload.propertyType,
+            location: locationLabel,
+            fractions: Number(payload.totalSupply) || 0,
+            expectedAnnualReturn: toPercent(payload.expectedAnnualReturn),
+            rentalYield: toPercent(payload.rentalYield),
         },
         attributes: {
             valuation: formatDisplayValue(valuation),
             tokenPrice: formatDisplayValue(tokenPrice),
-            quantity: fractions,
+            quantity: Number(payload.totalSupply) || 0,
         },
         price: tokenPrice,
         priceCurrency: 'USD',
         property: {
             totalValue: valuation,
-            totalSupply: fractions,
+            totalSupply: Number(payload.totalSupply) || 0,
             amenities,
             features,
             images,
-            city: location.city,
-            country: location.country,
-            description: payload?.description,
+            city: payload.city,
+            country: payload.country,
+            description: payload.description,
         },
         isListed: false,
-        status: 'draft',
+        status: payload.status || 'draft',
     };
 };
 

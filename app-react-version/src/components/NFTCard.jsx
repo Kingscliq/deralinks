@@ -5,6 +5,18 @@ const NFTCard = ({ asset, onList, onBuy, onView, showActions = true }) => {
   const meta = asset?.metadata || {};
   const attrs = asset?.attributes || {};
 
+  const imageCandidates = [
+    asset?.image,
+    ...(Array.isArray(asset?.images) ? asset.images : []),
+    ...(Array.isArray(meta?.images) ? meta.images : []),
+    ...(Array.isArray(asset?.property?.images) ? asset.property.images : []),
+  ];
+
+  const imageSrc =
+    imageCandidates.find(
+      value => typeof value === 'string' && value.trim().length > 0
+    ) || DEFAULT_IMAGE;
+
   const chips = [
     ['Type', meta.assetType, '🏷️'],
     ['Location', meta.location, '📍'],
@@ -38,7 +50,16 @@ const NFTCard = ({ asset, onList, onBuy, onView, showActions = true }) => {
       onClick={() => onView && onView(asset)}
       style={{ cursor: onView ? 'pointer' : 'default' }}
     >
-      <img src={DEFAULT_IMAGE} alt={asset?.name} className="nft-image" />
+      <img
+        src={imageSrc}
+        alt={asset?.name}
+        className="nft-image"
+        onError={event => {
+          if (event.currentTarget?.src !== DEFAULT_IMAGE) {
+            event.currentTarget.src = DEFAULT_IMAGE;
+          }
+        }}
+      />
       <div className="nft-content">
         <h3 className="nft-name">{asset?.name}</h3>
         <p className="nft-description">{asset?.description}</p>
