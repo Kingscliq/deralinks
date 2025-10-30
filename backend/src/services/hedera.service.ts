@@ -52,6 +52,7 @@ export const createPropertyCollection = async (params: {
   hcsTopicId: string;
   transactionId: string;
   timestamp: string;
+  supplyKey: string;
 }> => {
   const client = createHederaClient();
 
@@ -128,6 +129,7 @@ export const createPropertyCollection = async (params: {
       hcsTopicId,
       transactionId: tokenResponse.transactionId!.toString(),
       timestamp: new Date().toISOString(),
+      supplyKey: supplyKey.toStringDer(), // Return supply key for minting
     };
   } finally {
     client.close();

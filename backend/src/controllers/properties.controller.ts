@@ -5,7 +5,7 @@
 
 import { Request, Response } from 'express';
 import { query } from '../config/database';
-import { createPropertyCollection } from '../services/hedera.service';
+import { createPropertyCollection, mintNFTsToTreasury } from '../services/hedera.service';
 import { uploadFile, uploadJSON } from '../services/ipfs.service';
 import type { MintPropertyRequest, MintPropertyResponse } from '../types/api.types';
 
@@ -160,7 +160,20 @@ export const mintProperty = async (
       totalSupply,
     });
 
-    // Step 4: Save to database
+    // Step 4: Mint NFTs to treasury
+    console.log(`🪙 Minting ${totalSupply} NFT(s) to treasury...`);
+    const metadataCIDs = Array(totalSupply).fill(metadataCID);
+
+    const mintResult = await mintNFTsToTreasury({
+      tokenId: hederaResult.tokenId,
+      supplyKey: hederaResult.supplyKey,
+      quantity: totalSupply,
+      metadataCIDs,
+    });
+
+    console.log(`✅ Minted NFTs with serial numbers: ${mintResult.serialNumbers[0]} to ${mintResult.serialNumbers[mintResult.serialNumbers.length - 1]}`);
+
+    // Step 5: Save to database
     console.log('💾 Saving property to database...');
     const insertQuery = `
       INSERT INTO properties (
@@ -235,6 +248,11 @@ export const mintProperty = async (
         media: {
           images: imageUrls,
           documents: documentUrls,
+        },
+        nfts: {
+          mintedCount: mintResult.serialNumbers.length,
+          serialNumbers: mintResult.serialNumbers,
+          mintTransactionId: mintResult.transactionId,
         },
         hedera: {
           transactionId: hederaResult.transactionId,
