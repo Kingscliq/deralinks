@@ -104,6 +104,10 @@ export interface MintPropertyResponse {
       metadataCID: string; // IPFS CID for full metadata
       metadataUrl: string; // IPFS gateway URL
     };
+    media: {
+      images: string[]; // Array of IPFS gateway URLs for images
+      documents: string[]; // Array of IPFS gateway URLs for documents
+    };
     hedera: {
       transactionId: string; // Hedera transaction ID
       timestamp: string; // ISO timestamp

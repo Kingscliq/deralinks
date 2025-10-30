@@ -155,49 +155,59 @@ export const syncNFTTransfers = async (tokenId: string): Promise<number> => {
 };
 
 /**
- * Update NFT holdings based on transfer
+ * Update NFT holdings based on current ownership from Mirror Node
+ * Matches the actual nft_holdings schema
  */
 async function updateNFTHoldings(
   tokenId: string,
   serialNumber: number,
-  newOwner: string
+  ownerAccount: string
 ): Promise<void> {
   try {
-    // Get property ID from token
+    // Check if property exists (optional validation)
     const propertyQuery = `
       SELECT id FROM properties WHERE token_id = $1
     `;
     const propertyResult = await query(propertyQuery, [tokenId]);
-    const propertyId = propertyResult.rows[0]?.id;
 
-    if (!propertyId) {
-      console.log(`Property not found for token ${tokenId}`);
+    if (propertyResult.rows.length === 0) {
+      console.log(`⚠️  Property not found for token ${tokenId}, skipping holdings update`);
       return;
     }
 
-    // Remove from previous holder
+    // Remove this serial number from any previous holder
     await query(
       `UPDATE nft_holdings
-       SET nft_serial_numbers = array_remove(nft_serial_numbers, $1),
-           quantity = quantity - 1
-       WHERE property_id = $2 AND $1 = ANY(nft_serial_numbers)`,
-      [serialNumber, propertyId]
+       SET serial_numbers = array_remove(serial_numbers, $1),
+           quantity = array_length(array_remove(serial_numbers, $1), 1),
+           last_updated_at = NOW()
+       WHERE token_id = $2 AND $1 = ANY(serial_numbers)`,
+      [serialNumber, tokenId]
     );
 
-    // Add to new holder
+    // Add to current holder (using actual schema columns)
     await query(
-      `INSERT INTO nft_holdings (user_id, property_id, nft_serial_numbers, quantity, acquired_at)
-       VALUES (
-         (SELECT id FROM users WHERE account_id = $1),
-         $2, ARRAY[$3], 1, NOW()
+      `INSERT INTO nft_holdings (
+         owner_hedera_account, token_id, serial_numbers, quantity, first_acquired_at, last_updated_at
        )
-       ON CONFLICT (user_id, property_id) DO UPDATE
-       SET nft_serial_numbers = array_append(nft_holdings.nft_serial_numbers, $3),
-           quantity = nft_holdings.quantity + 1`,
-      [newOwner, propertyId, serialNumber]
+       VALUES ($1, $2, ARRAY[$3], 1, NOW(), NOW())
+       ON CONFLICT (owner_hedera_account, token_id)
+       DO UPDATE SET
+         serial_numbers = CASE
+           WHEN $3 = ANY(nft_holdings.serial_numbers) THEN nft_holdings.serial_numbers
+           ELSE array_append(nft_holdings.serial_numbers, $3)
+         END,
+         quantity = array_length(
+           CASE
+             WHEN $3 = ANY(nft_holdings.serial_numbers) THEN nft_holdings.serial_numbers
+             ELSE array_append(nft_holdings.serial_numbers, $3)
+           END, 1
+         ),
+         last_updated_at = NOW()`,
+      [ownerAccount, tokenId, serialNumber]
     );
   } catch (error: any) {
-    console.error('Error updating NFT holdings:', error);
+    console.error(`Error updating NFT holdings for serial ${serialNumber}:`, error);
   }
 }
 
