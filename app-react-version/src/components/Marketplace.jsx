@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { buyAsset, getAllListedAssets } from '../api/mockApi';
 
 import NFTCard from './NFTCard';
+import PurchaseModal from './PurchaseModal';
 import { useNotification } from '../context/NotificationContext.jsx';
 
 const Marketplace = ({ accountId }) => {
   const [listings, setListings] = useState([]);
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [purchasingListing, setPurchasingListing] = useState(null);
   const { showNotification } = useNotification();
 
   useEffect(() => {
@@ -46,7 +48,7 @@ const Marketplace = ({ accountId }) => {
       : `${currency} ${priceValue}`;
   };
 
-  const handleBuy = async asset => {
+  const handleBuy = listing => {
     if (!accountId) {
       showNotification({
         type: 'error',
@@ -55,61 +57,47 @@ const Marketplace = ({ accountId }) => {
       });
       return;
     }
+    setPurchasingListing(listing);
+  };
 
-    const availableQuantity =
-      asset.quantity || asset.serialNumbers?.length || 1;
-    const quantityInput = prompt(
-      `Enter quantity to buy (max ${availableQuantity})`,
-      '1'
-    );
-
-    if (quantityInput === null) return;
-
-    const quantity = Number(quantityInput);
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      showNotification({
-        type: 'error',
-        title: 'Invalid quantity',
-        message: 'Enter a quantity greater than zero.',
-      });
-      return;
-    }
-    if (quantity > availableQuantity) {
-      showNotification({
-        type: 'error',
-        title: 'Quantity too high',
-        message: 'Quantity exceeds available NFTs in this listing.',
-      });
-      return;
-    }
-
-    const priceLabel = formatPrice(asset);
-    const confirmed = window.confirm(
-      `Buy ${quantity} from ${asset.name} for ${priceLabel} each?`
-    );
-    if (!confirmed) return;
-
-    const response = await buyAsset({
-      listingId: asset.listingId,
-      buyerHederaAccount: accountId,
-      quantity,
-      paymentMethod: asset.priceCurrency === 'HBAR' ? 'HBAR' : 'USD',
-    });
-    if (response.success) {
-      showNotification({
-        type: 'success',
-        title: 'Purchase successful',
-        message: response.message || 'Purchase initiated successfully!',
-        autoClose: 4000,
-      });
-      loadListings();
-    } else {
+  const handlePurchaseSubmit = async purchaseData => {
+    try {
+      const response = await buyAsset(purchaseData);
+      if (response.success) {
+        showNotification({
+          type: 'success',
+          title: 'Purchase successful',
+          message: response.message || 'Purchase completed successfully!',
+          autoClose: 4000,
+        });
+        setPurchasingListing(null);
+        await loadListings();
+      } else {
+        const errorMessage =
+          response.error?.message || response.error || 'Failed to complete purchase.';
+        showNotification({
+          type: 'error',
+          title: 'Purchase failed',
+          message: errorMessage,
+        });
+        throw new Error(errorMessage);
+      }
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.error?.message ||
+        error?.message ||
+        'An unexpected error occurred while processing the purchase.';
       showNotification({
         type: 'error',
         title: 'Purchase failed',
-        message: response.error || 'Failed to complete purchase.',
+        message: errorMessage,
       });
+      throw error;
     }
+  };
+
+  const handleClosePurchaseModal = () => {
+    setPurchasingListing(null);
   };
 
   if (loading) {
@@ -155,6 +143,15 @@ const Marketplace = ({ accountId }) => {
             />
           ))}
         </div>
+      )}
+
+      {purchasingListing && (
+        <PurchaseModal
+          listing={purchasingListing}
+          accountId={accountId}
+          onClose={handleClosePurchaseModal}
+          onSubmit={handlePurchaseSubmit}
+        />
       )}
     </div>
   );
