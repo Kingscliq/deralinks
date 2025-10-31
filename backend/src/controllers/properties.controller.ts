@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 import { query } from '../config/database';
 import { createPropertyCollection, mintNFTsToTreasury } from '../services/hedera.service';
 import { uploadFile, uploadJSON } from '../services/ipfs.service';
+import { calculateMintingFee } from '../config/fees.config';
 import type { MintPropertyRequest, MintPropertyResponse } from '../types/api.types';
 
 // POST /api/v1/properties/mint
@@ -68,6 +69,10 @@ export const mintProperty = async (
         },
       });
     }
+
+    // Calculate platform fees
+    const mintingFee = calculateMintingFee(parsedTotalSupply);
+    console.log(`💰 Platform minting fee: $${mintingFee.toFixed(2)} USD`);
 
     // TODO: Check if owner has property-owner verification NFT
     // const hasVerification = await checkVerification(ownerHederaAccount, 'property-owner');
@@ -269,6 +274,17 @@ export const mintProperty = async (
           timestamp: hederaResult.timestamp,
           explorerUrl,
         },
+        // @ts-ignore - fees field not in type definition, but valid for response
+        fees: {
+          mintingFee: mintingFee,
+          currency: 'USD',
+          breakdown: {
+            baseFee: 50,
+            perNFTFee: 0.5,
+            nftCount: parsedTotalSupply,
+          },
+          note: 'Minting fee must be paid to platform before collection is created',
+        },
       },
     });
   } catch (error: any) {
@@ -302,12 +318,16 @@ export const listProperties = async (
 
     let queryText = `
       SELECT
-        id, token_id, property_name, collection_name, collection_symbol,
-        owner_hedera_account, property_type, category,
-        city, state, country, total_value, token_price,
-        total_supply, available_supply, images, status,
-        expected_annual_return, rental_yield, created_at
-      FROM properties
+        p.id, p.token_id, p.property_name, p.collection_name, p.collection_symbol,
+        p.owner_hedera_account, p.property_type, p.category,
+        p.city, p.state, p.country, p.total_value, p.token_price,
+        p.total_supply, p.available_supply, p.images, p.status,
+        p.expected_annual_return, p.rental_yield, p.created_at,
+        COALESCE(h.serial_numbers, ARRAY[]::integer[]) as owner_serial_numbers,
+        COALESCE(h.quantity, 0) as owner_nft_count
+      FROM properties p
+      LEFT JOIN nft_holdings h ON p.token_id = h.token_id
+        AND p.owner_hedera_account = h.owner_hedera_account
       WHERE 1=1
     `;
 
@@ -316,41 +336,41 @@ export const listProperties = async (
 
     if (status) {
       paramCount++;
-      queryText += ` AND status = $${paramCount}`;
+      queryText += ` AND p.status = $${paramCount}`;
       params.push(status);
     }
 
     if (propertyType) {
       paramCount++;
-      queryText += ` AND property_type = $${paramCount}`;
+      queryText += ` AND p.property_type = $${paramCount}`;
       params.push(propertyType);
     }
 
     if (city) {
       paramCount++;
-      queryText += ` AND LOWER(city) = LOWER($${paramCount})`;
+      queryText += ` AND LOWER(p.city) = LOWER($${paramCount})`;
       params.push(city);
     }
 
     if (country) {
       paramCount++;
-      queryText += ` AND LOWER(country) = LOWER($${paramCount})`;
+      queryText += ` AND LOWER(p.country) = LOWER($${paramCount})`;
       params.push(country);
     }
 
     if (minPrice) {
       paramCount++;
-      queryText += ` AND token_price >= $${paramCount}`;
+      queryText += ` AND p.token_price >= $${paramCount}`;
       params.push(parseFloat(minPrice as string));
     }
 
     if (maxPrice) {
       paramCount++;
-      queryText += ` AND token_price <= $${paramCount}`;
+      queryText += ` AND p.token_price <= $${paramCount}`;
       params.push(parseFloat(maxPrice as string));
     }
 
-    queryText += ` ORDER BY created_at DESC`;
+    queryText += ` ORDER BY p.created_at DESC`;
 
     paramCount++;
     queryText += ` LIMIT $${paramCount}`;

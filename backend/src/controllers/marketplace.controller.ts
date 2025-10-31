@@ -6,6 +6,11 @@
 import { Request, Response } from 'express';
 import { query } from '../config/database';
 import { getAccountNFTs } from '../services/hedera.service';
+import {
+  calculatePrimarySaleCommission,
+  calculatePlatformTransactionFee,
+  PLATFORM_FEES
+} from '../config/fees.config';
 import type {
   CreateListingRequest,
   CreateListingResponse,
@@ -37,6 +42,10 @@ export const createListing = async (
         },
       });
     }
+
+    // Calculate listing fee
+    const listingFee = PLATFORM_FEES.LISTING_FEE.STANDARD;
+    console.log(`💰 Platform listing fee: $${listingFee} USD`);
 
     // Step 1: Verify seller owns these NFTs
     console.log(`🔍 Verifying ownership for account ${sellerHederaAccount}...`);
@@ -107,11 +116,11 @@ export const createListing = async (
     const insertQuery = `
       INSERT INTO marketplace_listings (
         seller_hedera_account, token_id, serial_numbers, quantity,
-        price_per_nft, total_price, currency, expires_at, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        price_per_nft, total_price, currency, expires_at, status, listing_fee
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING id, seller_hedera_account, token_id, serial_numbers,
                 quantity, price_per_nft, total_price, currency,
-                status, created_at, expires_at
+                status, created_at, expires_at, listing_fee
     `;
 
     const quantity = serialNumbers.length;
@@ -128,6 +137,7 @@ export const createListing = async (
       currency,
       expiresAtDate,
       'active',
+      listingFee,
     ]);
 
     const listing = result.rows[0];
@@ -150,6 +160,13 @@ export const createListing = async (
         status: listing.status,
         listedAt: listing.created_at,
         expiresAt: listing.expires_at,
+        // @ts-ignore - fees field not in type definition, but valid for response
+        fees: {
+          listingFee: listingFee,
+          currency: 'USD',
+          note: 'Listing fee must be paid to platform to activate listing',
+          validFor: `${PLATFORM_FEES.LISTING_FEE.DURATION_DAYS} days`,
+        },
       },
     });
   } catch (error: any) {
@@ -547,12 +564,12 @@ export const buyNFT = async (
       });
     }
 
-    // Get listing details
+    // Get listing details including property owner to determine if this is a primary or secondary sale
     const listingQuery = `
       SELECT
         l.id, l.seller_hedera_account, l.token_id, l.serial_numbers,
         l.quantity, l.price_per_nft, l.total_price, l.currency, l.status,
-        p.id as property_id, p.property_name, p.collection_symbol
+        p.id as property_id, p.property_name, p.collection_symbol, p.owner_hedera_account
       FROM marketplace_listings l
       INNER JOIN properties p ON l.token_id = p.token_id
       WHERE l.id = $1 AND l.status = 'active'
@@ -599,17 +616,46 @@ export const buyNFT = async (
     const totalPrice = listing.price_per_nft * purchaseQuantity;
     const serialNumbersToPurchase = listing.serial_numbers.slice(0, purchaseQuantity);
 
-    // Create purchase transaction record
+    // Determine if this is a primary sale (from property owner) or secondary sale
+    const isPrimarySale = listing.seller_hedera_account === listing.owner_hedera_account;
+
+    // Calculate platform fees based on sale type
+    let platformFee: number;
+    let sellerReceives: number;
+    let feeType: string;
+    let feePercentage: number;
+
+    if (isPrimarySale) {
+      // Primary sale: 10% commission to platform
+      feePercentage = PLATFORM_FEES.PRIMARY_SALE_COMMISSION;
+      platformFee = calculatePrimarySaleCommission(totalPrice);
+      feeType = 'Primary Sale Commission';
+      sellerReceives = totalPrice - platformFee;
+      console.log(`💰 Primary sale detected - Platform commission: ${platformFee.toFixed(2)} USD (${feePercentage}%)`);
+    } else {
+      // Secondary sale: 2.5% platform transaction fee (royalty fee of 5% is built into NFT)
+      feePercentage = PLATFORM_FEES.PLATFORM_TRANSACTION_FEE;
+      platformFee = calculatePlatformTransactionFee(totalPrice);
+      feeType = 'Platform Transaction Fee';
+      // Note: Hedera enforces the 5% royalty automatically, so it's already deducted
+      sellerReceives = totalPrice - platformFee;
+      console.log(`💰 Secondary sale detected - Platform fee: ${platformFee.toFixed(2)} USD (${feePercentage}%)`);
+      console.log(`   Royalty (${PLATFORM_FEES.ROYALTY_FEE}%) enforced by Hedera smart contract`);
+    }
+
+    // Create purchase transaction record with fee tracking
     console.log('🛒 Creating purchase transaction...');
     const purchaseQuery = `
       INSERT INTO marketplace_transactions (
         listing_id, buyer_hedera_account, seller_hedera_account,
         token_id, serial_numbers, quantity, price_per_nft,
-        total_price, currency, status, transaction_type
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        total_price, currency, status, transaction_type,
+        sale_type, platform_fee, platform_fee_percentage, seller_receives
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING id, listing_id, buyer_hedera_account, seller_hedera_account,
                 token_id, serial_numbers, quantity, price_per_nft,
-                total_price, currency, status, created_at
+                total_price, currency, status, created_at,
+                sale_type, platform_fee, platform_fee_percentage, seller_receives
     `;
 
     const txResult = await query(purchaseQuery, [
@@ -624,6 +670,10 @@ export const buyNFT = async (
       listing.currency,
       'pending',
       'purchase',
+      isPrimarySale ? 'primary' : 'secondary',
+      platformFee,
+      feePercentage,
+      sellerReceives,
     ]);
 
     const transaction = txResult.rows[0];
@@ -669,6 +719,28 @@ export const buyNFT = async (
         sellerHederaAccount: transaction.seller_hedera_account,
         status: transaction.status,
         createdAt: transaction.created_at,
+        saleType: isPrimarySale ? 'primary' : 'secondary',
+        fees: {
+          platformFee: parseFloat(platformFee.toFixed(2)),
+          feeType: feeType,
+          feePercentage: feePercentage,
+          sellerReceives: parseFloat(sellerReceives.toFixed(2)),
+          ...(isPrimarySale ? {} : {
+            royaltyFee: PLATFORM_FEES.ROYALTY_FEE,
+            royaltyNote: 'Enforced automatically by Hedera smart contract to property owner'
+          }),
+          breakdown: {
+            totalPrice: parseFloat(transaction.total_price),
+            platformFee: parseFloat(platformFee.toFixed(2)),
+            sellerReceives: parseFloat(sellerReceives.toFixed(2)),
+            ...(isPrimarySale ? {
+              description: `Property owner receives ${((100 - feePercentage)).toFixed(1)}% after ${feePercentage}% platform commission`
+            } : {
+              description: `Seller receives ${((100 - feePercentage)).toFixed(1)}% after ${feePercentage}% platform fee. ${PLATFORM_FEES.ROYALTY_FEE}% royalty to property owner is automatically enforced by NFT contract`
+            })
+          },
+          currency: transaction.currency,
+        },
         instructions: {
           step1: 'Transfer payment to seller account',
           step2: 'Seller approves and transfers NFT to buyer',
@@ -677,6 +749,8 @@ export const buyNFT = async (
             recipient: transaction.seller_hedera_account,
             amount: parseFloat(transaction.total_price),
             currency: transaction.currency,
+            platformFeeRecipient: PLATFORM_FEES.FEE_COLLECTOR_ACCOUNT,
+            platformFeeAmount: parseFloat(platformFee.toFixed(2)),
           },
         },
       },

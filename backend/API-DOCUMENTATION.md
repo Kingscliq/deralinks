@@ -10,17 +10,18 @@
 ## 📋 Table of Contents
 
 1. [Authentication](#authentication)
-2. [Properties Endpoints](#properties-endpoints)
-3. [Tokens Endpoints](#tokens-endpoints)
-4. [Users Endpoints](#users-endpoints)
-5. [Investors Endpoints](#investors-endpoints)
-6. [Property Owners Endpoints](#property-owners-endpoints)
-7. [Marketplace Endpoints](#marketplace-endpoints)
-8. [Files/IPFS Endpoints](#filesipfs-endpoints)
-9. [Admin Endpoints](#admin-endpoints)
-10. [Verification Endpoints](#verification-endpoints)
-11. [DAO Governance Endpoints](#dao-governance-endpoints)
-12. [Error Codes](#error-codes)
+2. [Platform Fees](#platform-fees)
+3. [Properties Endpoints](#properties-endpoints)
+4. [Tokens Endpoints](#tokens-endpoints)
+5. [Users Endpoints](#users-endpoints)
+6. [Investors Endpoints](#investors-endpoints)
+7. [Property Owners Endpoints](#property-owners-endpoints)
+8. [Marketplace Endpoints](#marketplace-endpoints)
+9. [Files/IPFS Endpoints](#filesipfs-endpoints)
+10. [Admin Endpoints](#admin-endpoints)
+11. [Verification Endpoints](#verification-endpoints)
+12. [DAO Governance Endpoints](#dao-governance-endpoints)
+13. [Error Codes](#error-codes)
 
 ---
 
@@ -60,6 +61,149 @@ DeraLinks uses **wallet-based authentication** via signed messages. No JWT token
 - All protected endpoints verify wallet signatures
 - Timestamps must be within 5 minutes (prevents replay attacks)
 - Public key must match account ID
+
+---
+
+## 💰 Platform Fees
+
+DeraLinks operates a multi-layer fee structure to generate revenue while maintaining competitive pricing for property owners and investors.
+
+### Fee Structure Overview
+
+| Fee Type | Rate | When Applied | Who Pays |
+|----------|------|--------------|----------|
+| **Minting Fee** | $50 + $0.50/NFT | Property tokenization (upfront) | Property Owner |
+| **Primary Sale Commission** | 10% | First sale from treasury | Property Owner |
+| **Platform Transaction Fee** | 2.5% | All marketplace sales | Seller |
+| **Listing Fee** | $25 | Creating marketplace listing | Seller |
+| **Royalty Fee** | 5% | Secondary sales (automatic) | Buyer |
+
+---
+
+### 1. Minting Fee (Phase 1 - Upfront Revenue)
+
+**When:** Property owner creates NFT collection
+**Formula:** `$50 base + ($0.50 × total NFT supply)`
+**Purpose:** Covers platform costs for NFT creation, IPFS storage, and HCS topic setup
+
+**Examples:**
+- 100 NFTs: $50 + (100 × $0.50) = **$100**
+- 1,000 NFTs: $50 + (1,000 × $0.50) = **$550**
+- 10,000 NFTs: $50 + (10,000 × $0.50) = **$5,050**
+
+---
+
+### 2. Primary Sale Commission (Phase 1 - First Sale Revenue)
+
+**When:** Property owner sells NFTs from their treasury (first time sale)
+**Rate:** 10% of sale price
+**Purpose:** Platform revenue from helping property owners raise capital
+
+**Example:**
+- Property owner sells 50 NFTs at $1,000 each = $50,000 total
+- Platform commission: 10% × $50,000 = **$5,000**
+- Property owner receives: **$45,000**
+
+---
+
+### 3. Platform Transaction Fee (Phase 2 - Marketplace Revenue)
+
+**When:** Any marketplace sale (secondary market)
+**Rate:** 2.5% of sale price
+**Purpose:** Platform revenue from facilitating marketplace transactions
+
+**Example:**
+- Investor sells 10 NFTs at $1,200 each = $12,000 total
+- Platform fee: 2.5% × $12,000 = **$300**
+- Seller receives: $12,000 - $300 = **$11,700**
+- Note: 5% royalty to property owner enforced automatically by Hedera
+
+---
+
+### 4. Listing Fee (Phase 2 - Marketplace Revenue)
+
+**When:** Seller creates marketplace listing
+**Rate:** $25 (standard) or $100 (premium featured)
+**Duration:** 90 days
+**Purpose:** Platform revenue from marketplace listing services
+
+---
+
+### 5. Royalty Fee (Built into NFT)
+
+**When:** All secondary sales (after first sale)
+**Rate:** 5% of sale price
+**Recipient:** Original property owner
+**Enforcement:** Automatic via Hedera smart contract
+
+**Example:**
+- NFT sells for $1,200 on secondary market
+- Royalty: 5% × $1,200 = **$60** (goes to property owner)
+- Platform fee: 2.5% × $1,200 = **$30** (goes to platform)
+- Seller receives: $1,200 - $60 - $30 = **$1,110**
+
+---
+
+### Revenue Model Example
+
+**Scenario:** Property owner tokenizes $500,000 property into 10,000 NFTs at $50 each
+
+**Phase 1 - Tokenization:**
+- Minting fee: $50 + (10,000 × $0.50) = **$5,050** ← Platform Revenue
+- Property owner pays upfront
+
+**Phase 1 - Primary Sales:**
+- Property owner sells 5,000 NFTs at $50 = $250,000 total
+- Primary sale commission: 10% × $250,000 = **$25,000** ← Platform Revenue
+- Property owner receives: **$225,000**
+
+**Phase 2 - Secondary Market:**
+- Investor sells 10 NFTs at $55 each = $550 total
+- Listing fee: **$25** ← Platform Revenue
+- Platform transaction fee: 2.5% × $550 = **$13.75** ← Platform Revenue
+- Royalty to property owner: 5% × $550 = $27.50 (auto-enforced)
+- Investor receives: $550 - $13.75 - $27.50 = **$508.75**
+
+**Total Platform Revenue:**
+- Minting: $5,050
+- Primary sales: $25,000
+- Listing: $25
+- Transaction fee: $13.75
+- **Grand Total: $30,088.75**
+
+---
+
+### Fee Configuration
+
+All fees are configurable via environment variables in `.env`:
+
+```bash
+# Phase 1: Minting Fees
+MINTING_BASE_FEE=50                    # Base minting fee in USD (default: 50)
+MINTING_PER_NFT_FEE=0.5                # Per-NFT minting fee in USD (default: 0.5)
+
+# Phase 1: Primary Sale Commission
+PRIMARY_SALE_COMMISSION=10             # Primary sale commission % (default: 10)
+
+# Phase 2: Platform Transaction Fee
+PLATFORM_TRANSACTION_FEE=2.5           # Platform transaction fee % (default: 2.5)
+
+# Phase 2: Listing Fees
+LISTING_FEE_STANDARD=25                # Standard listing fee in USD (default: 25)
+LISTING_FEE_PREMIUM=100                # Premium listing fee in USD (default: 100)
+LISTING_FEE_DURATION=90                # Listing duration in days (default: 90)
+
+# NFT Royalty Fee
+ROYALTY_FEE=5                          # Royalty fee % on secondary sales (default: 5)
+
+# Fee Collection Account
+FEE_COLLECTOR_ACCOUNT_ID=0.0.xxxxx     # Platform fee recipient account
+```
+
+**To adjust fees in production:**
+1. Update environment variables on Render.com dashboard
+2. Restart the service
+3. New fee rates take effect immediately (no code deployment needed)
 
 ---
 
@@ -128,10 +272,24 @@ Create a new property and mint its NFT collection.
       "transactionId": "0.0.7127074@1234567890.123456789",
       "timestamp": "2025-10-28T10:30:00.000Z",
       "explorerUrl": "https://hashscan.io/testnet/token/0.0.7128093"
+    },
+    "fees": {
+      "mintingFee": 5050.00,
+      "currency": "USD",
+      "breakdown": {
+        "baseFee": 50,
+        "perNFTFee": 0.5,
+        "nftCount": 10000
+      },
+      "note": "Minting fee must be paid to platform before collection is created"
     }
   }
 }
 ```
+
+**Platform Fees:**
+- **Minting Fee**: $50 base fee + $0.50 per NFT
+- Example: Minting 10,000 NFTs = $50 + (10,000 × $0.50) = **$5,050 USD**
 
 ---
 
@@ -176,6 +334,8 @@ GET /api/v1/properties?status=active&country=Nigeria&limit=10&offset=0
         "token_price": "50.00",
         "total_supply": 10000,
         "available_supply": 10000,
+        "owner_serial_numbers": [1, 2, 3, 4, 5],
+        "owner_nft_count": 5,
         "images": ["QmXxx...", "QmYyy..."],
         "status": "active",
         "expected_annual_return": "12.50",
@@ -187,6 +347,10 @@ GET /api/v1/properties?status=active&country=Nigeria&limit=10&offset=0
   }
 }
 ```
+
+**Note:**
+- `owner_serial_numbers` - Array of NFT serial numbers currently owned by the property owner (treasury account)
+- `owner_nft_count` - Total count of NFTs owned by the property owner
 
 ---
 
@@ -797,10 +961,19 @@ List NFTs for sale on secondary market.
     "totalPrice": "165.00",
     "status": "active",
     "expiresAt": "2025-11-27T11:00:00.000Z",
-    "createdAt": "2025-10-28T11:00:00.000Z"
+    "createdAt": "2025-10-28T11:00:00.000Z",
+    "fees": {
+      "listingFee": 25,
+      "currency": "USD",
+      "note": "Listing fee must be paid to platform to activate listing",
+      "validFor": "90 days"
+    }
   }
 }
 ```
+
+**Platform Fees:**
+- **Listing Fee**: $25 USD (standard listing, valid for 90 days)
 
 ---
 
@@ -903,7 +1076,7 @@ Purchase NFTs from marketplace (buy now).
 ```json
 {
   "success": true,
-  "message": "Purchase successful",
+  "message": "Purchase initiated successfully",
   "data": {
     "transactionId": "uuid-tx1",
     "listingId": "uuid-listing1",
@@ -914,11 +1087,43 @@ Purchase NFTs from marketplace (buy now).
     "totalPrice": "110.00",
     "buyer": "0.0.789012",
     "seller": "0.0.123456",
-    "hederaTransactionId": "0.0.789012@1234567890.123456789",
-    "completedAt": "2025-10-28T11:00:00.000Z"
+    "saleType": "secondary",
+    "fees": {
+      "platformFee": 2.75,
+      "feeType": "Platform Transaction Fee",
+      "feePercentage": 2.5,
+      "sellerReceives": 107.25,
+      "royaltyFee": 5,
+      "royaltyNote": "Enforced automatically by Hedera smart contract to property owner",
+      "breakdown": {
+        "totalPrice": 110.00,
+        "platformFee": 2.75,
+        "sellerReceives": 107.25,
+        "description": "Seller receives 97.5% after 2.5% platform fee. 5% royalty to property owner is automatically enforced by NFT contract"
+      },
+      "currency": "USD"
+    },
+    "instructions": {
+      "step1": "Transfer payment to seller account",
+      "step2": "Seller approves and transfers NFT to buyer",
+      "step3": "Transaction status will be updated to completed",
+      "paymentDetails": {
+        "recipient": "0.0.123456",
+        "amount": 110.00,
+        "currency": "USD",
+        "platformFeeRecipient": "0.0.PLATFORM",
+        "platformFeeAmount": 2.75
+      }
+    }
   }
 }
 ```
+
+**Platform Fees:**
+- **Primary Sale** (from property owner): 10% commission to platform
+  - Example: $100 sale → Platform: $10, Owner receives: $90
+- **Secondary Sale** (from other sellers): 2.5% platform transaction fee + 5% royalty (automatic)
+  - Example: $100 sale → Platform: $2.50, Royalty: $5, Seller receives: $92.50
 
 ---
 
