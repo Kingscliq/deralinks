@@ -1,21 +1,24 @@
 import './styles/App.css';
 
+import {
+  NotificationProvider,
+  useNotification,
+} from './context/NotificationContext.jsx';
 import React, { useState } from 'react';
+import { buildHoldingFromMint, mintNFT } from './api/mockApi';
 
 import AssetDetails from './components/AssetDetails.jsx';
 import ConnectPrompt from './components/ui/ConnectPrompt.jsx';
 import Header from './components/ui/Header.jsx';
-import Hero from './components/ui/Hero.jsx';
 import LandingHero from './components/ui/LandingHero.jsx';
 import LandingSales from './components/ui/LandingSales.jsx';
 import Marketplace from './components/Marketplace.jsx';
 import MintForm from './components/MintForm.jsx';
 import MyAssets from './components/MyAssets.jsx';
-import MyGroup from './components/MyGroup.jsx';
-import { mintNFT } from './api/mockApi';
+import MyListings from './components/MyListings.jsx';
 import walletConnectFcn from './components/hedera/walletConnect.js';
 
-function App() {
+function AppContent() {
   const [walletData, setWalletData] = useState();
   const [accountId, setAccountId] = useState();
   const [walletConnected, setWalletConnected] = useState(false);
@@ -24,6 +27,8 @@ function App() {
 
   const [connectTextSt, setConnectTextSt] = useState('🔌 Connect here...');
   const [connectLinkSt, setConnectLinkSt] = useState('');
+  const [localHoldings, setLocalHoldings] = useState([]);
+  const { showNotification } = useNotification();
 
   async function connectWallet() {
     if (accountId !== undefined) {
@@ -47,11 +52,43 @@ function App() {
   const handleMint = async payload => {
     const response = await mintNFT(payload);
     if (response.success) {
-      alert('NFT minted successfully!');
+      const mintedHolding = buildHoldingFromMint(payload, response.data);
+      if (mintedHolding) {
+        setLocalHoldings(prev => {
+          const filtered = prev.filter(
+            item => item.tokenId !== mintedHolding.tokenId
+          );
+          return [mintedHolding, ...filtered];
+        });
+      }
+      showNotification({
+        type: 'success',
+        title: 'Mint Successful',
+        message: response.message || 'NFT minted successfully!',
+        autoClose: 4000,
+      });
       setActiveTab('my-assets');
     } else {
-      alert('Failed to mint NFT');
+      const rawMessage =
+        response?.error?.message ||
+        response?.error ||
+        'Failed to mint NFT collection.';
+
+      const normalizedMessage = rawMessage.toString();
+      const formattedMessage = normalizedMessage.includes(
+        'INSUFFICIENT_PAYER_BALANCE'
+      )
+        ? 'Mint failed: the payer account does not have enough HBAR to cover network fees. Please fund the treasury/operator account and try again.'
+        : normalizedMessage;
+
+      showNotification({
+        type: 'error',
+        title: 'Mint failed',
+        message: formattedMessage,
+      });
     }
+
+    return response;
   };
 
   const LandingPage = () => (
@@ -84,12 +121,12 @@ function App() {
     setWalletData(undefined);
     setConnectTextSt('🔌 Connect here...');
     setConnectLinkSt('');
+    setLocalHoldings([]);
     setActiveTab('marketplace');
   };
 
   const [routeAsset, setRouteAsset] = useState(null);
 
-  // Simple hash-based route for details: #/asset?tokenId=...&serialNumber=...
   React.useEffect(() => {
     const parse = () => {
       const hash = window.location.hash || '';
@@ -131,6 +168,12 @@ function App() {
           My Assets
         </button>
         <button
+          className={`nav-tab ${activeTab === 'my-listings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('my-listings')}
+        >
+          My Listings
+        </button>
+        <button
           className={`nav-tab ${activeTab === 'mint' ? 'active' : ''}`}
           onClick={() => setActiveTab('mint')}
         >
@@ -152,7 +195,12 @@ function App() {
             {activeTab === 'marketplace' && (
               <Marketplace accountId={accountId} />
             )}
-            {activeTab === 'my-assets' && <MyAssets accountId={accountId} />}
+            {activeTab === 'my-assets' && (
+              <MyAssets accountId={accountId} localHoldings={localHoldings} />
+            )}
+            {activeTab === 'my-listings' && (
+              <MyListings accountId={accountId} />
+            )}
             {activeTab === 'mint' && (
               <MintForm onMint={handleMint} accountId={accountId} />
             )}
@@ -164,5 +212,11 @@ function App() {
 
   return walletConnected ? <MainPage /> : <LandingPage />;
 }
+
+const App = () => (
+  <NotificationProvider>
+    <AppContent />
+  </NotificationProvider>
+);
 
 export default App;
