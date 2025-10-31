@@ -643,8 +643,15 @@ export const getAssetsByWallet = async accountId => {
 
 export const getProperties = async (filters = {}) => {
     try {
+        // Transform ownerAccountId to ownerAccount for backend API
+        const params = { ...filters };
+        if (params.ownerAccountId) {
+            params.ownerAccount = params.ownerAccountId;
+            delete params.ownerAccountId;
+        }
+
         const { data } = await api.get('/properties', {
-            params: filters,
+            params,
         });
 
         const payload = data?.data || {};
@@ -831,8 +838,15 @@ export const listAsset = async payload => {
 
 export const getAllListedAssets = async (filters = {}) => {
     try {
+        // Transform sellerAccountId to sellerAccount for backend API
+        const params = { ...filters };
+        if (params.sellerAccountId) {
+            params.sellerAccount = params.sellerAccountId;
+            delete params.sellerAccountId;
+        }
+
         const { data } = await api.get('/marketplace/listings', {
-            params: filters,
+            params,
         });
 
         const payload = data?.data || {};
