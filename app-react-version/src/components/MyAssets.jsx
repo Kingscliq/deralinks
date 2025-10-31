@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAssetsByWallet, getProperties, listAsset } from '../api/mockApi';
 
+import ListingModal from './ListingModal';
 import NFTCard from './NFTCard';
 import { useNotification } from '../context/NotificationContext.jsx';
 
@@ -37,10 +38,9 @@ const mergeHoldings = (...holdingsLists) => {
       if (!item?.tokenId) return;
 
       const existing = map.get(item.tokenId) || {};
-      const nextSerials =
-        Array.isArray(item.serialNumbers) && item.serialNumbers.length
-          ? item.serialNumbers
-          : existing.serialNumbers;
+      const nextSerials = Array.isArray(item.serialNumbers)
+        ? item.serialNumbers
+        : existing.serialNumbers || [];
 
       const mergedMetadata = {
         ...(existing.metadata || {}),
@@ -86,6 +86,7 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
   const [summary, setSummary] = useState(null);
   const [creatorAssets, setCreatorAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [listingAsset, setListingAsset] = useState(null);
   const { showNotification } = useNotification();
 
   const loadAssets = useCallback(async () => {
@@ -109,8 +110,17 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
         }),
       ]);
 
+      const normalizedHoldings = holdingsResponse.success
+        ? (holdingsResponse.data?.holdings || []).map(holding => ({
+            ...holding,
+            serialNumbers: Array.isArray(holding?.serialNumbers)
+              ? holding.serialNumbers
+              : [],
+          }))
+        : [];
+
       if (holdingsResponse.success) {
-        setAssets(holdingsResponse.data?.holdings || []);
+        setAssets(normalizedHoldings);
         setSummary(holdingsResponse.data?.summary || null);
       } else {
         setAssets([]);
@@ -122,22 +132,24 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
         });
       }
 
-      if (propertiesResponse.success) {
-        const ownedProperties = (propertiesResponse.data || []).filter(
-          asset => {
-            const ownerId = asset?.ownerHederaAccount || asset?.owner;
-            return ownerId && ownerId.toString() === accountId.toString();
-          }
+      const transformedProperties = propertiesResponse.success
+        ? (propertiesResponse.data || []).map(asset => ({
+            ...asset,
+            serialNumbers: Array.isArray(asset?.serialNumbers)
+              ? asset.serialNumbers
+              : Array.isArray(asset?.all_serial_numbers)
+              ? asset.all_serial_numbers
+              : [],
+          }))
+        : [];
+
+      setCreatorAssets(transformedProperties);
+
+      if (!propertiesResponse.success && propertiesResponse.error) {
+        console.warn(
+          'Unable to load minted properties:',
+          propertiesResponse.error
         );
-        setCreatorAssets(ownedProperties);
-      } else {
-        setCreatorAssets([]);
-        if (propertiesResponse.error) {
-          console.warn(
-            'Unable to load minted properties:',
-            propertiesResponse.error
-          );
-        }
       }
     } catch (error) {
       console.error('Error loading assets', error);
@@ -158,7 +170,7 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
     loadAssets();
   }, [loadAssets]);
 
-  const handleList = async asset => {
+  const handleList = asset => {
     if (!asset?.serialNumbers || asset.serialNumbers.length === 0) {
       showNotification({
         type: 'error',
@@ -167,91 +179,68 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
       });
       return;
     }
+    setListingAsset(asset);
+  };
 
-    const priceInput = prompt('Enter price per NFT (in USD):');
-    if (priceInput === null) return;
-    const pricePerNFT = Number(priceInput);
-    if (!Number.isFinite(pricePerNFT) || pricePerNFT <= 0) {
-      showNotification({
-        type: 'error',
-        title: 'Invalid price',
-        message: 'Enter a valid price per NFT greater than zero.',
-      });
-      return;
-    }
-
-    const maxQuantity = asset.serialNumbers.length;
-    const quantityInput = prompt(
-      `How many NFTs do you want to list? (max ${maxQuantity})`,
-      String(maxQuantity)
-    );
-    if (quantityInput === null) return;
-    const quantity = Number(quantityInput);
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      showNotification({
-        type: 'error',
-        title: 'Invalid quantity',
-        message: 'Enter a quantity greater than zero.',
-      });
-      return;
-    }
-    if (quantity > maxQuantity) {
-      showNotification({
-        type: 'error',
-        title: 'Quantity too high',
-        message: 'Quantity exceeds owned NFTs for this property.',
-      });
-      return;
-    }
-
-    const serialNumbers = asset.serialNumbers.slice(0, quantity);
-
-    const expiresInput = prompt(
-      'How many days should the listing remain active? (default 30)',
-      '30'
-    );
-    if (expiresInput === null) return;
-    const expiresValue = expiresInput.trim();
-    const expiresInDays = Number(expiresValue === '' ? 30 : expiresValue);
-    if (!Number.isFinite(expiresInDays) || expiresInDays <= 0) {
-      showNotification({
-        type: 'error',
-        title: 'Invalid duration',
-        message: 'Enter a valid number of days greater than zero.',
-      });
-      return;
-    }
+  const handleListingSubmit = async formData => {
+    const { pricePerNFT, quantity, expiresInDays } = formData;
+    const serialNumbers = listingAsset.serialNumbers.slice(0, quantity);
 
     const payload = {
       sellerHederaAccount: accountId,
-      tokenId: asset.tokenId,
+      tokenId: listingAsset.tokenId,
       serialNumbers,
       quantity,
       pricePerNFT,
       currency: 'USD',
-      title: `${asset.name || 'Asset'} NFTs`,
+      title: `${listingAsset.name || 'Asset'} NFTs`,
       description:
-        asset.description ||
-        `Listing ${quantity} NFTs from ${asset.name || asset.tokenId}`,
+        listingAsset.description ||
+        `Listing ${quantity} NFTs from ${
+          listingAsset.name || listingAsset.tokenId
+        }`,
       expiresInDays,
     };
 
-    const response = await listAsset(payload);
-    if (response.success) {
-      showNotification({
-        type: 'success',
-        title: 'Listing created',
-        message: response.message || 'Asset listed successfully!',
-        autoClose: 4000,
-      });
-      await loadAssets();
-    } else {
+    try {
+      const response = await listAsset(payload);
+      if (response.success) {
+        showNotification({
+          type: 'success',
+          title: 'Listing created',
+          message: response.message || 'Asset listed successfully!',
+          autoClose: 4000,
+        });
+        setListingAsset(null);
+        await loadAssets();
+      } else {
+        const errorMessage =
+          response.error?.message ||
+          response.error ||
+          'Failed to list asset on marketplace.';
+        showNotification({
+          type: 'error',
+          title: 'Listing failed',
+          message: errorMessage,
+        });
+        throw new Error(errorMessage);
+      }
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.error?.message ||
+        error?.message ||
+        'An unexpected error occurred while creating the listing.';
       showNotification({
         type: 'error',
         title: 'Listing failed',
-        message: response.error || 'Failed to list asset on marketplace.',
+        message: errorMessage,
       });
+      throw error;
     }
+  };
+
+  const handleCloseModal = () => {
+    setListingAsset(null);
   };
 
   const mergedAssets = useMemo(
@@ -395,6 +384,14 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
             />
           ))}
         </div>
+      )}
+
+      {listingAsset && (
+        <ListingModal
+          asset={listingAsset}
+          onClose={handleCloseModal}
+          onSubmit={handleListingSubmit}
+        />
       )}
     </div>
   );

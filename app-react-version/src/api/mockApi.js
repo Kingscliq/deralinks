@@ -338,6 +338,9 @@ const mapHolding = holding => {
         isListed: false,
         price: holding?.tokenPrice || property?.token_price,
         priceCurrency: 'USD',
+        ownerSerialNumbers: ensureArray(holding?.ownerSerialNumbers)
+            .map(Number)
+            .filter(Number.isFinite),
     };
 };
 
@@ -368,6 +371,14 @@ const mapProperty = property => {
     );
     const valuation = cleanNumeric(
         property?.total_value ?? property?.totalValue
+    );
+
+    const rawOwnerSerials = ensureArray(property?.all_serial_numbers);
+    const ownerSerialNumbers = rawOwnerSerials
+        .map(value => Number(value))
+        .filter(Number.isFinite);
+    const ownerCount = Number(
+        property?.total_nfts_held ?? property?.owner_nft_count
     );
 
     return {
@@ -428,6 +439,14 @@ const mapProperty = property => {
         updatedAt: property?.updated_at ?? property?.updatedAt,
         isListed: false,
         isCreatorAsset: true,
+        ownerSerialNumbers,
+        ownerSerialCount: Number.isFinite(ownerCount)
+            ? ownerCount
+            : ownerSerialNumbers.length,
+        all_serial_numbers: rawOwnerSerials,
+        total_nfts_held: Number.isFinite(ownerCount)
+            ? ownerCount
+            : ownerSerialNumbers.length,
     };
 };
 
@@ -479,12 +498,39 @@ const mapListing = listing => {
 
 const handleApiError = error => {
     console.error('DeraLinks API error:', error);
-    const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        'An unexpected error occurred';
-    return { success: false, error: message };
+
+    // Extract error message from various possible structures
+    const errorData = error?.response?.data;
+    let message = 'An unexpected error occurred';
+    let code = null;
+
+    if (errorData) {
+        // Handle structured error response: { success: false, error: { code, message } }
+        if (errorData.error) {
+            if (typeof errorData.error === 'object') {
+                message = errorData.error.message || errorData.error.code || message;
+                code = errorData.error.code;
+            } else {
+                message = errorData.error;
+            }
+        }
+        // Handle direct message field
+        else if (errorData.message) {
+            message = errorData.message;
+        }
+    }
+    // Fallback to axios error message
+    else if (error?.message) {
+        message = error.message;
+    }
+
+    return {
+        success: false,
+        error: {
+            message,
+            code,
+        }
+    };
 };
 
 export const mintNFT = async payload => {
@@ -538,34 +584,43 @@ export const getAssetsByWallet = async accountId => {
 
 export const getProperties = async (filters = {}) => {
     try {
-        const {
-            ownerAccountId,
-            ownerHederaAccount,
-            ...queryParams
-        } = filters || {};
-
         const { data } = await api.get('/properties', {
-            params: queryParams,
+            params: filters,
         });
 
         const payload = data?.data || {};
-        const properties = Array.isArray(payload?.properties)
+        const rawProperties = Array.isArray(payload?.properties)
             ? payload.properties
-                .map(mapProperty)
-                .filter(Boolean)
             : [];
 
-        const ownerFilter = ownerHederaAccount || ownerAccountId;
-        const filteredProperties = ownerFilter
-            ? properties.filter(asset => {
-                const ownerId = asset?.ownerHederaAccount || asset?.owner;
-                return (
-                    ownerId &&
-                    ownerId.toString().toLowerCase() ===
-                    ownerFilter.toString().toLowerCase()
-                );
+        const properties = rawProperties
+            .map(property => {
+                const mapped = mapProperty(property);
+
+                if (!mapped) {
+                    return null;
+                }
+
+                const allSerials = Array.isArray(property?.all_serial_numbers)
+                    ? property.all_serial_numbers
+                        .map(value => Number(value))
+                        .filter(Number.isFinite)
+                    : [];
+
+                const ownerCount = Number(property?.total_nfts_held);
+
+                return {
+                    ...mapped,
+                    serialNumbers: allSerials,
+                    ownerSerialNumbers: allSerials,
+                    ownerSerialCount: Number.isFinite(ownerCount)
+                        ? ownerCount
+                        : allSerials.length,
+                };
             })
-            : properties;
+            .filter(Boolean);
+
+        const filteredProperties = properties;
 
         return {
             success: true,
