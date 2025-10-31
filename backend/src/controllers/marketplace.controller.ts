@@ -221,6 +221,7 @@ export const getListings = async (
   try {
     const {
       tokenId,
+      sellerAccount,
       propertyType,
       city,
       country,
@@ -276,6 +277,12 @@ export const getListings = async (
       paramCount++;
       queryText += ` AND l.token_id = $${paramCount}`;
       params.push(tokenId);
+    }
+
+    if (sellerAccount) {
+      paramCount++;
+      queryText += ` AND l.seller_hedera_account = $${paramCount}`;
+      params.push(sellerAccount);
     }
 
     if (propertyType) {
@@ -343,6 +350,12 @@ export const getListings = async (
       countParamCount++;
       countQuery += ` AND l.token_id = $${countParamCount}`;
       countParams.push(tokenId);
+    }
+
+    if (sellerAccount) {
+      countParamCount++;
+      countQuery += ` AND l.seller_hedera_account = $${countParamCount}`;
+      countParams.push(sellerAccount);
     }
 
     if (propertyType) {
