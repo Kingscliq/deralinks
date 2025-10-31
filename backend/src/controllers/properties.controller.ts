@@ -8,6 +8,7 @@ import { query } from '../config/database';
 import { createPropertyCollection, mintNFTsToTreasury } from '../services/hedera.service';
 import { uploadFile, uploadJSON } from '../services/ipfs.service';
 import { calculateMintingFee } from '../config/fees.config';
+import { syncNFTTransfers } from '../services/indexer.service';
 import type { MintPropertyRequest, MintPropertyResponse } from '../types/api.types';
 
 // POST /api/v1/properties/mint
@@ -241,7 +242,17 @@ export const mintProperty = async (
 
     const property = result.rows[0];
 
-    // Step 5: Return response
+    // Step 5: Sync NFT holdings from blockchain
+    try {
+      console.log(`🔄 Syncing NFT holdings for token ${hederaResult.tokenId}...`);
+      await syncNFTTransfers(hederaResult.tokenId);
+      console.log(`✅ NFT holdings synced successfully`);
+    } catch (syncError: any) {
+      console.error('⚠️  Warning: Failed to sync NFT holdings:', syncError.message);
+      // Don't fail the entire mint operation if sync fails - it can be synced later
+    }
+
+    // Step 6: Return response
     const network = process.env.HEDERA_NETWORK || 'testnet';
     const explorerUrl = `https://hashscan.io/${network}/token/${hederaResult.tokenId}`;
 
@@ -323,11 +334,22 @@ export const listProperties = async (
         p.city, p.state, p.country, p.total_value, p.token_price,
         p.total_supply, p.available_supply, p.images, p.status,
         p.expected_annual_return, p.rental_yield, p.created_at,
-        COALESCE(h.serial_numbers, ARRAY[]::integer[]) as owner_serial_numbers,
-        COALESCE(h.quantity, 0) as owner_nft_count
+        COALESCE(
+          (SELECT array_agg(serial_number ORDER BY serial_number)
+           FROM (
+             SELECT DISTINCT unnest(serial_numbers) as serial_number
+             FROM nft_holdings
+             WHERE token_id = p.token_id
+           ) serials
+          ), ARRAY[]::integer[]
+        ) as all_serial_numbers,
+        COALESCE(
+          (SELECT SUM(quantity)
+           FROM nft_holdings
+           WHERE token_id = p.token_id
+          ), 0
+        ) as total_nfts_held
       FROM properties p
-      LEFT JOIN nft_holdings h ON p.token_id = h.token_id
-        AND p.owner_hedera_account = h.owner_hedera_account
       WHERE 1=1
     `;
 
