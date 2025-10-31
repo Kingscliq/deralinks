@@ -334,8 +334,8 @@ GET /api/v1/properties?status=active&country=Nigeria&limit=10&offset=0
         "token_price": "50.00",
         "total_supply": 10000,
         "available_supply": 10000,
-        "owner_serial_numbers": [1, 2, 3, 4, 5],
-        "owner_nft_count": 5,
+        "all_serial_numbers": [1, 2, 3, 4, 5],
+        "total_nfts_held": 5,
         "images": ["QmXxx...", "QmYyy..."],
         "status": "active",
         "expected_annual_return": "12.50",
@@ -349,8 +349,8 @@ GET /api/v1/properties?status=active&country=Nigeria&limit=10&offset=0
 ```
 
 **Note:**
-- `owner_serial_numbers` - Array of NFT serial numbers currently owned by the property owner (treasury account)
-- `owner_nft_count` - Total count of NFTs owned by the property owner
+- `all_serial_numbers` - Array of ALL NFT serial numbers for this property across all holders (sorted)
+- `total_nfts_held` - Total count of NFTs held across all owners (empty array if not yet synced from blockchain)
 
 ---
 
