@@ -317,6 +317,7 @@ export const listProperties = async (
 ): Promise<any> => {
   try {
     const {
+      ownerAccount,
       status,
       propertyType,
       city,
@@ -355,6 +356,12 @@ export const listProperties = async (
 
     const params: any[] = [];
     let paramCount = 0;
+
+    if (ownerAccount) {
+      paramCount++;
+      queryText += ` AND p.owner_hedera_account = $${paramCount}`;
+      params.push(ownerAccount);
+    }
 
     if (status) {
       paramCount++;
