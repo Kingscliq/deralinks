@@ -47,26 +47,9 @@ export const createListing = async (
     const listingFee = PLATFORM_FEES.LISTING_FEE.STANDARD;
     console.log(`💰 Platform listing fee: $${listingFee} USD`);
 
-    // Step 1: Verify seller owns these NFTs
-    console.log(`🔍 Verifying ownership for account ${sellerHederaAccount}...`);
-    const nfts = await getAccountNFTs(sellerHederaAccount, tokenId);
-    const ownedSerialNumbers = nfts.map(nft => parseInt(nft.serial_number));
-
-    // Check if all requested serial numbers are owned by seller
-    const notOwned = serialNumbers.filter((serial: number) => !ownedSerialNumbers.includes(serial));
-    if (notOwned.length > 0) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'OWNERSHIP_ERROR',
-          message: `Seller does not own serial numbers: ${notOwned.join(', ')}`,
-        },
-      });
-    }
-
-    // Step 2: Check if property exists in database
+    // Step 1: Check if property exists and get owner info
     const propertyQuery = `
-      SELECT id, property_name, collection_symbol, token_price, total_supply
+      SELECT id, property_name, collection_symbol, token_price, total_supply, owner_hedera_account
       FROM properties
       WHERE token_id = $1
     `;
@@ -83,6 +66,47 @@ export const createListing = async (
     }
 
     const property = propertyResult.rows[0];
+    const isPropertyOwner = property.owner_hedera_account === sellerHederaAccount;
+    const treasuryAccount = process.env.TREASURY_ACCOUNT_ID || process.env.OPERATOR_ID || '';
+
+    // Step 2: Verify ownership (property owner can list from treasury, investors must own NFTs)
+    let accountToCheck = sellerHederaAccount;
+    let isTreasuryListing = false;
+    let nftHolderAccount = sellerHederaAccount;
+
+    if (isPropertyOwner) {
+      // Property owner can list NFTs from treasury
+      console.log(`✅ Seller is property owner. Checking treasury account for NFTs...`);
+      accountToCheck = treasuryAccount;
+      isTreasuryListing = true;
+      nftHolderAccount = treasuryAccount;
+    }
+
+    console.log(`🔍 Verifying ownership for account ${accountToCheck}...`);
+    const nfts = await getAccountNFTs(accountToCheck, tokenId);
+    const ownedSerialNumbers = nfts.map(nft => parseInt(nft.serial_number));
+
+    // Check if all requested serial numbers are owned
+    const notOwned = serialNumbers.filter((serial: number) => !ownedSerialNumbers.includes(serial));
+    if (notOwned.length > 0) {
+      if (isPropertyOwner) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'TREASURY_OWNERSHIP_ERROR',
+            message: `Treasury does not hold serial numbers: ${notOwned.join(', ')}. These NFTs may have already been sold or transferred.`,
+          },
+        });
+      } else {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'OWNERSHIP_ERROR',
+            message: `Seller does not own serial numbers: ${notOwned.join(', ')}`,
+          },
+        });
+      }
+    }
 
     // Step 3: Check if any of these NFTs are already listed
     const existingListingsQuery = `
@@ -113,14 +137,20 @@ export const createListing = async (
 
     // Step 4: Create listing in database
     console.log('💾 Creating marketplace listing...');
+    if (isTreasuryListing) {
+      console.log('📦 Treasury listing: NFTs will be transferred from treasury when purchased');
+    }
+
     const insertQuery = `
       INSERT INTO marketplace_listings (
         seller_hedera_account, token_id, serial_numbers, quantity,
-        price_per_nft, total_price, currency, expires_at, status, listing_fee
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        price_per_nft, total_price, currency, expires_at, status, listing_fee,
+        is_treasury_listing, nft_holder_account
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id, seller_hedera_account, token_id, serial_numbers,
                 quantity, price_per_nft, total_price, currency,
-                status, created_at, expires_at, listing_fee
+                status, created_at, expires_at, listing_fee,
+                is_treasury_listing, nft_holder_account
     `;
 
     const quantity = serialNumbers.length;
@@ -138,6 +168,8 @@ export const createListing = async (
       expiresAtDate,
       'active',
       listingFee,
+      isTreasuryListing,
+      nftHolderAccount,
     ]);
 
     const listing = result.rows[0];
@@ -569,6 +601,7 @@ export const buyNFT = async (
       SELECT
         l.id, l.seller_hedera_account, l.token_id, l.serial_numbers,
         l.quantity, l.price_per_nft, l.total_price, l.currency, l.status,
+        l.is_treasury_listing, l.nft_holder_account,
         p.id as property_id, p.property_name, p.collection_symbol, p.owner_hedera_account
       FROM marketplace_listings l
       INNER JOIN properties p ON l.token_id = p.token_id
@@ -700,6 +733,10 @@ export const buyNFT = async (
       );
     }
 
+    // Determine the account that actually holds the NFTs for transfer
+    const nftTransferFrom = listing.nft_holder_account || listing.seller_hedera_account;
+    const isTreasuryTransfer = listing.is_treasury_listing || false;
+
     res.status(201).json({
       success: true,
       message: 'Purchase initiated successfully. Proceed with payment and NFT transfer.',
@@ -717,9 +754,14 @@ export const buyNFT = async (
         currency: transaction.currency,
         buyerHederaAccount: transaction.buyer_hedera_account,
         sellerHederaAccount: transaction.seller_hedera_account,
+        nftHolderAccount: nftTransferFrom,
+        isTreasuryTransfer: isTreasuryTransfer,
         status: transaction.status,
         createdAt: transaction.created_at,
         saleType: isPrimarySale ? 'primary' : 'secondary',
+        transferNote: isTreasuryTransfer
+          ? 'NFTs will be transferred from treasury account'
+          : 'NFTs will be transferred from seller account',
         fees: {
           platformFee: parseFloat(platformFee.toFixed(2)),
           feeType: feeType,
