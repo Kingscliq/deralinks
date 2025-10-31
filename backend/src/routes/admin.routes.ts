@@ -9,6 +9,8 @@ import {
   approvePropertyOwner,
   rejectPropertyOwner,
   getPendingVerifications,
+  syncPropertyNFTs,
+  syncAllPropertyNFTs,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -27,5 +29,11 @@ router.post('/property-owners/:id/approve', approvePropertyOwner);
 
 // POST /api/v1/admin/property-owners/:id/reject - Reject property owner
 router.post('/property-owners/:id/reject', rejectPropertyOwner);
+
+// POST /api/v1/admin/sync-nft/:tokenId - Sync NFT holdings for a specific property
+router.post('/sync-nft/:tokenId', syncPropertyNFTs);
+
+// POST /api/v1/admin/sync-all-nfts - Sync NFT holdings for all properties
+router.post('/sync-all-nfts', syncAllPropertyNFTs);
 
 export default router;
