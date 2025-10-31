@@ -6,6 +6,7 @@
 import { Request, Response } from 'express';
 import { query } from '../config/database';
 import { mintVerificationNFT } from '../services/hedera.service';
+import { syncNFTTransfers, syncAllProperties } from '../services/indexer.service';
 
 // POST /api/v1/admin/investors/:id/approve-kyc - Approve investor KYC
 export const approveInvestorKYC = async (
@@ -417,10 +418,82 @@ export const getPendingVerifications = async (
   }
 };
 
+// POST /api/v1/admin/sync-nft/:tokenId - Sync NFT holdings for a specific property
+export const syncPropertyNFTs = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { tokenId } = req.params;
+
+    if (!tokenId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Token ID is required',
+        },
+      });
+    }
+
+    console.log(`🔄 Syncing NFT holdings for token ${tokenId}...`);
+    const syncedCount = await syncNFTTransfers(tokenId);
+
+    res.json({
+      success: true,
+      message: `Successfully synced ${syncedCount} NFT holdings for token ${tokenId}`,
+      data: {
+        tokenId,
+        syncedCount,
+        syncedAt: new Date(),
+      },
+    });
+  } catch (error: any) {
+    console.error('Error syncing property NFTs:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SYNC_ERROR',
+        message: error.message || 'Failed to sync NFT holdings',
+      },
+    });
+  }
+};
+
+// POST /api/v1/admin/sync-all-nfts - Sync NFT holdings for all properties
+export const syncAllPropertyNFTs = async (
+  _req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    console.log('🔄 Starting sync of all property NFT collections...');
+    await syncAllProperties();
+
+    res.json({
+      success: true,
+      message: 'Successfully synced all property NFT holdings',
+      data: {
+        syncedAt: new Date(),
+      },
+    });
+  } catch (error: any) {
+    console.error('Error syncing all property NFTs:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SYNC_ERROR',
+        message: error.message || 'Failed to sync all NFT holdings',
+      },
+    });
+  }
+};
+
 export default {
   approveInvestorKYC,
   rejectInvestorKYC,
   approvePropertyOwner,
   rejectPropertyOwner,
   getPendingVerifications,
+  syncPropertyNFTs,
+  syncAllPropertyNFTs,
 };
