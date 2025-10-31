@@ -16,6 +16,48 @@ const api = axios.create({
     timeout: 1500000,
 });
 
+// Add request interceptor for debugging
+api.interceptors.request.use(
+    config => {
+        console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+        return config;
+    },
+    error => {
+        console.error('[API Request Error]', error);
+        return Promise.reject(error);
+    }
+);
+
+// Add response interceptor for consistent error handling
+api.interceptors.response.use(
+    response => {
+        return response;
+    },
+    error => {
+        console.error('[API Response Error]', error);
+
+        // Handle different types of errors
+        if (error.code === 'ECONNABORTED') {
+            error.userMessage = 'Request timeout. Please check your internet connection.';
+        } else if (error.code === 'ERR_NETWORK') {
+            error.userMessage = 'Network error. Please check your internet connection.';
+        } else if (error.message === 'Network Error') {
+            error.userMessage = 'Unable to connect to the server. Please check if the API is running.';
+        } else if (error.response?.status === 0 || !error.response) {
+            // CORS or network issue
+            error.userMessage = 'Unable to reach the server. This might be a CORS issue or the server is down.';
+        } else if (error.response?.status === 404) {
+            error.userMessage = 'API endpoint not found.';
+        } else if (error.response?.status === 500) {
+            error.userMessage = 'Server error. Please try again later.';
+        } else if (error.response?.status === 503) {
+            error.userMessage = 'Service temporarily unavailable. Please try again later.';
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 const tryParseJson = value => {
     if (typeof value !== 'string') return value;
     const trimmed = value.trim();
@@ -504,14 +546,19 @@ const handleApiError = error => {
     let message = 'An unexpected error occurred';
     let code = null;
 
-    if (errorData) {
+    // First, check if we have a user-friendly message from the interceptor
+    if (error?.userMessage) {
+        message = error.userMessage;
+    }
+    // Check for structured API error response
+    else if (errorData) {
         // Handle structured error response: { success: false, error: { code, message } }
         if (errorData.error) {
             if (typeof errorData.error === 'object') {
                 message = errorData.error.message || errorData.error.code || message;
                 code = errorData.error.code;
             } else {
-                message = errorData.error;
+                message = String(errorData.error);
             }
         }
         // Handle direct message field
@@ -519,7 +566,19 @@ const handleApiError = error => {
             message = errorData.message;
         }
     }
-    // Fallback to axios error message
+    // Handle network errors
+    else if (error?.code === 'ERR_NETWORK' || error?.message === 'Network Error') {
+        message = 'Unable to connect to the server. Please check your internet connection or verify the API is running.';
+    }
+    // Handle timeout errors
+    else if (error?.code === 'ECONNABORTED') {
+        message = 'Request timeout. The server took too long to respond.';
+    }
+    // Handle CORS errors (status 0 or no response)
+    else if (!error?.response) {
+        message = 'Unable to reach the server. This might be a CORS issue or the server is unavailable.';
+    }
+    // Fallback to generic error message
     else if (error?.message) {
         message = error.message;
     }
@@ -528,7 +587,7 @@ const handleApiError = error => {
         success: false,
         error: {
             message,
-            code,
+            code: code || error?.code || error?.response?.status,
         }
     };
 };
