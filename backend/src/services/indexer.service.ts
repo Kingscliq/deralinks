@@ -52,7 +52,7 @@ export const fetchNFTList = async (
       (data.nfts || []).forEach((nft: any) => {
         if (nft.account_id && nft.serial_number) {
           allNFTs.push({
-            serial_number: nft.serial_number,
+            serial_number: parseInt(nft.serial_number, 10), // Convert string to integer
             account_id: nft.account_id,
           });
         }
@@ -176,31 +176,44 @@ async function updateNFTHoldings(
     }
 
     // Remove this serial number from any previous holder
+    // First, delete rows where this is the last serial number (would result in empty array)
+    await query(
+      `DELETE FROM nft_holdings
+       WHERE token_id = $1
+         AND $2::integer = ANY(serial_numbers)
+         AND array_length(serial_numbers, 1) = 1`,
+      [tokenId, serialNumber]
+    );
+
+    // Then update rows that still have other serial numbers
     await query(
       `UPDATE nft_holdings
-       SET serial_numbers = array_remove(serial_numbers, $1),
-           quantity = array_length(array_remove(serial_numbers, $1), 1),
+       SET serial_numbers = array_remove(serial_numbers, $1::integer),
+           quantity = array_length(array_remove(serial_numbers, $1::integer), 1),
            last_updated_at = NOW()
-       WHERE token_id = $2 AND $1 = ANY(serial_numbers)`,
+       WHERE token_id = $2
+         AND $1::integer = ANY(serial_numbers)
+         AND array_length(serial_numbers, 1) > 1`,
       [serialNumber, tokenId]
     );
 
     // Add to current holder (using actual schema columns)
+    // Cast $3 to integer to ensure PostgreSQL treats it as integer, not text
     await query(
       `INSERT INTO nft_holdings (
          owner_hedera_account, token_id, serial_numbers, quantity, first_acquired_at, last_updated_at
        )
-       VALUES ($1, $2, ARRAY[$3], 1, NOW(), NOW())
+       VALUES ($1, $2, ARRAY[$3::integer], 1, NOW(), NOW())
        ON CONFLICT (owner_hedera_account, token_id)
        DO UPDATE SET
          serial_numbers = CASE
-           WHEN $3 = ANY(nft_holdings.serial_numbers) THEN nft_holdings.serial_numbers
-           ELSE array_append(nft_holdings.serial_numbers, $3)
+           WHEN $3::integer = ANY(nft_holdings.serial_numbers) THEN nft_holdings.serial_numbers
+           ELSE array_append(nft_holdings.serial_numbers, $3::integer)
          END,
          quantity = array_length(
            CASE
-             WHEN $3 = ANY(nft_holdings.serial_numbers) THEN nft_holdings.serial_numbers
-             ELSE array_append(nft_holdings.serial_numbers, $3)
+             WHEN $3::integer = ANY(nft_holdings.serial_numbers) THEN nft_holdings.serial_numbers
+             ELSE array_append(nft_holdings.serial_numbers, $3::integer)
            END, 1
          ),
          last_updated_at = NOW()`,
