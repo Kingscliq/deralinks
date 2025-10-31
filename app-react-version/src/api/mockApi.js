@@ -978,6 +978,3 @@ export const buildHoldingFromMint = (payload, result = {}) => {
     };
 };
 
-export const apiClient = api;
-export const API_BASE = API_BASE_URL;
-

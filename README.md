@@ -106,10 +106,11 @@ HEDERA_NETWORK=testnet
 ### Tech Stack
 
 - **Framework:** React 17 (Create React App / `react-scripts@5`)
+  - _Note: React 17 is used due to HashConnect wallet library compatibility. The HashConnect package (v0.2.9) used for Hedera wallet integration is not compatible with React 18+. Upgrading to React 18 would require migrating to a newer HashConnect version or alternative wallet connector._
 - **Language:** JavaScript (ES2020+)
 - **State Management:** React hooks + Context API
 - **HTTP Client:** Axios
-- **Wallet Connector:** HashConnect (HashPack/Blade support)
+- **Wallet Connector:** HashConnect v0.2.9 (HashPack/Blade support)
 
 ### Core Flows
 
@@ -140,6 +141,33 @@ REACT_APP_HASHCONNECT_NETWORK=testnet
 
 - `npm run build` emits production bundle (`build/` directory).
 - Frontend is deployed to Vercel (refer to last deployment instructions/README for specifics).
+
+---
+
+## Hedera Setup Scripts (`hedera-setup/`)
+
+The `hedera-setup/` folder contains standalone TypeScript scripts for initial Hedera blockchain setup and testing. **These scripts are not used by the React application at runtime** - they're utilities for blockchain administrators and developers.
+
+### Purpose
+
+- Create Hedera accounts, topics, and token collections
+- Mint NFTs directly to the blockchain
+- Test token transfers and IPFS uploads
+- Manage KYC/verification NFTs
+- Batch operations for blockchain setup
+
+### Usage
+
+```bash
+cd hedera-setup
+npm install
+npm run setup:accounts    # Create accounts
+npm run setup:collections # Create NFT collections
+npm run setup:mint        # Mint test NFTs
+# See package.json for all available scripts
+```
+
+**Note:** The React app interacts with the Hedera blockchain through the backend API only. These scripts are for initial setup, testing, and administrative tasks.
 
 ---
 
