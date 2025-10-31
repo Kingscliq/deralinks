@@ -223,3 +223,7 @@ const App = () => (
 );
 
 export default App;
+
+
+
+// https://deralinks-backend.onrender.com/api/v1/properties?ownerAccount=0.0.7144250
