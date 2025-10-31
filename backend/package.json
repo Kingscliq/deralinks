@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "tsc && npm run migrate",
+    "start": "npm run migrate && node dist/index.js",
     "start:dev": "ts-node src/index.ts",
+    "migrate": "node scripts/run-migrations.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write 'src/**/*.{ts,json}'",
     "db:migrate": "node dist/database/migrate.js",
