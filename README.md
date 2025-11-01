@@ -540,7 +540,26 @@ For issues and questions:
 
 ---
 
-## 📞 Contact & Links
+## � Demo & Resources
+
+- **Live App (Deployed)**: https://deralinks.vercel.app/
+- **Presentation (Loom)**: https://www.loom.com/share/1243fbce321f422694c144851be32053
+- **Social (X)**: https://x.com/DeralinksA81789
+- **Certificate**: https://drive.google.com/file/d/1xf_nrOFrc7p_6p6Bcujpt5DWTDU2_9Mj/view?usp=drive_link
+- **GitHub Repository**: https://github.com/Kingscliq/deralinks
+- **Hedera Account ID (testnet)**: `0.0.3778695`
+
+> Security notice: the project's private keys MUST NOT be committed to source control or included in README files. The private key you provided has been intentionally omitted from this file. Store private keys in a secure secret manager or in a local `.env` file that's excluded from git (see `backend/.env.example` and `backend/ENV-SETUP-SUMMARY.md`). Example environment variable:
+
+```
+# backend/.env
+OPERATOR_ID=0.0.3778695
+OPERATOR_KEY=302...   # set this locally or in your secret manager
+```
+
+If you need guidance for secure secret storage, ask and I can suggest best practices (Vault, environment variables, platform secrets on Vercel/Render/etc.).
+
+## �📞 Contact & Links
 
 - **Hedera**: [portal.hedera.com](https://portal.hedera.com)
 - **HashConnect**: [docs.hashconnect.hashpack.app](https://docs.hashconnect.hashpack.app)
