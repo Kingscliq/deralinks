@@ -1,6 +1,6 @@
 # DeraLinks - Real Estate Tokenization Platform
 
-DeraLinks is a comprehensive platform for tokenizing real estate assets on the Hedera blockchain. It enables property owners to fractionally tokenize their assets and create a marketplace for trading these tokens.
+DeraLinks is a comprehensive platform for tokenizing real estate assets on a DAG-based distributed ledger (Hedera). It enables property owners to fractionally tokenize their assets and create a marketplace for trading these tokens.
 
 ---
 
@@ -10,7 +10,7 @@ DeraLinks is a comprehensive platform for tokenizing real estate assets on the H
 deralinks/
 ├── backend/                    # Node.js/Express API server
 ├── app-react-version/          # React frontend application
-├── hedera-setup/              # Blockchain setup utilities
+├── hedera-setup/              # DAG ledger setup utilities
 └── README.md                  # This file
 ```
 
@@ -18,9 +18,9 @@ deralinks/
 
 ## 🎯 Overview
 
-DeraLinks combines blockchain technology with real estate investment, providing:
+DeraLinks combines DAG-based distributed ledger technology with real estate investment, providing:
 
-- **Asset Tokenization**: Convert real estate properties into NFT collections on Hedera
+- **Asset Tokenization**: Convert real estate properties into NFT collections on Hedera (a DAG-based distributed ledger)
 - **Fractional Ownership**: Split properties into multiple NFT tokens for fractional investment
 - **Marketplace**: Buy and sell property tokens on a decentralized marketplace
 - **Wallet Integration**: Secure wallet connection via HashConnect (HashPack/Blade wallets)
@@ -35,7 +35,7 @@ DeraLinks combines blockchain technology with real estate investment, providing:
 - **Runtime**: Node.js v18+
 - **Framework**: Express.js
 - **Database**: PostgreSQL 14+
-- **Blockchain**: Hedera SDK (@hashgraph/sdk)
+- **Ledger / SDK**: Hedera (DAG-based ledger) via @hashgraph/sdk
 - **Storage**: Pinata (IPFS)
 - **Validation**: Express Validator
 - **CORS**: Configured for frontend integration
@@ -198,15 +198,15 @@ npm run build  # Creates production build in /build
 
 ## 🔗 Hedera Setup Scripts (`/hedera-setup`)
 
-Standalone TypeScript utilities for blockchain administration. **Not used by the React app at runtime** - these are for initial setup and testing.
+Standalone TypeScript utilities for Hedera (DAG-based ledger) administration. **Not used by the React app at runtime** - these are for initial setup and testing.
 
 ### Purpose
 
 - Create Hedera accounts, topics, and token collections
-- Mint NFTs directly to blockchain
+- Mint NFTs directly to the Hedera ledger
 - Test transfers and IPFS uploads
 - Manage KYC/verification NFTs
-- Batch blockchain operations
+- Batch ledger operations
 
 ### Usage
 
@@ -346,7 +346,7 @@ Assets appear in buyer's "My Assets"
 ```
 ┌─────────────┐         ┌──────────────┐         ┌─────────────┐
 │   Frontend  │ ←─API──→│   Backend    │ ←─SDK──→│   Hedera    │
-│   (React)   │         │  (Express)   │         │ Blockchain  │
+│   (React)   │         │  (Express)   │         │ DAG-based ledger  │
 └─────────────┘         └──────────────┘         └─────────────┘
        │                       │
        │                       ↓
