@@ -1,6 +1,6 @@
 # DeraLinks - Real Estate Tokenization Platform
 
-DeraLinks is a comprehensive platform for tokenizing real estate assets on a DAG-based distributed ledger (Hedera). It enables property owners to fractionally tokenize their assets and create a marketplace for trading these tokens.
+DeraLinks is a platform that helps physical-asset owners fractionalize ownership of their assets by issuing tradable digital fractions. Individuals can acquire, hold, and trade these fractional shares, fostering shared prosperity. Built on a DAG-based distributed ledger (Hedera), DeraLinks provides end-to-end tooling for asset issuance, custody, and a peer marketplace.
 
 ---
 
@@ -18,13 +18,13 @@ deralinks/
 
 ## 🎯 Overview
 
-DeraLinks combines DAG-based distributed ledger technology with real estate investment, providing:
+DeraLinks is focused on enabling asset owners to fractionalize properties and physical assets, and on giving investors simple, secure access to buy and manage fractions of those assets. Core capabilities include:
 
-- **Asset Tokenization**: Convert real estate properties into NFT collections on Hedera (a DAG-based distributed ledger)
-- **Fractional Ownership**: Split properties into multiple NFT tokens for fractional investment
-- **Marketplace**: Buy and sell property tokens on a decentralized marketplace
-- **Wallet Integration**: Secure wallet connection via HashConnect (HashPack/Blade wallets)
-- **IPFS Storage**: Decentralized storage for property images and documents via Pinata
+- **Asset Fractionalization**: Enable owners to split an asset into tradable digital fractions (NFT-backed shares) so they can raise capital while retaining governance
+- **Investor Access & Custody**: Allow individuals to purchase, hold, and manage fractional ownership with verifiable provenance and ownership metadata
+- **Marketplace**: A peer marketplace to list, discover, and trade fractional shares with clear pricing and settlement
+- **Wallet Integration**: Secure wallet pairing via HashConnect for custody and transaction signing
+- **IPFS Storage**: Immutable storage for images, contracts, and provenance metadata via Pinata
 
 ---
 
@@ -42,12 +42,12 @@ DeraLinks combines DAG-based distributed ledger technology with real estate inve
 
 ### Key Features
 
-- **Property Management**: Create, mint, and manage tokenized properties
-- **Marketplace API**: List, buy, and manage property token listings
-- **File Uploads**: Upload property images/documents to IPFS
-- **User Holdings**: Track user NFT holdings via Hedera mirror node
-- **Transaction Processing**: Handle Hedera token creation, minting, and transfers
-- **Error Handling**: Comprehensive error codes and validation
+- **Property Management & Fractionalization**: Create tokenized property collections and issue fractional ownership units that represent shares in a physical asset
+- **Marketplace API**: List fractional shares for sale, handle offers, and manage settlement and order lifecycle
+- **File Uploads**: Upload property images and legal documents to IPFS for immutable provenance and evidence
+- **Investor Holdings**: Track fractional holdings (share counts and percentages) and metadata via the Hedera mirror node
+- **Transaction Processing**: Create collections, mint fractional units, and handle ledger transfers and settlements
+- **Error Handling**: Comprehensive error codes and validation for production-grade reliability
 
 ### Environment Variables
 
@@ -126,14 +126,14 @@ npm run dev           # Start development server on port 3600
 
 ### Key Features
 
-- **Wallet Connection**: Secure pairing with Hedera wallets via HashConnect
-- **Asset Tokenization**: Upload property images/documents and mint NFTs
-- **My Assets**: View owned property tokens with serial numbers
-- **Marketplace**: Browse and purchase property tokens
-- **Listing Management**: List owned NFTs for sale with custom pricing
-- **Purchase Flow**: Buy property tokens with form-based checkout
-- **Error Boundaries**: Graceful error handling prevents app crashes
-- **Responsive Design**: Mobile-friendly interface
+- **Wallet Connection**: Secure pairing with Hedera wallets via HashConnect for custody and signing
+- **Asset Fractionalization UI**: Guided flows for asset owners to create tokenized collections and issue fractional shares
+- **My Holdings**: Investors can view fractional holdings with share counts, percentages, and provenance metadata
+- **Marketplace**: Browse and purchase fractional shares with clear listings, price history, and settlement details
+- **Listing Management**: Owners and holders can list fractional shares for sale and manage orders
+- **Purchase Flow**: Support fractional quantity purchases, settlement receipts, and transaction history
+- **Error Boundaries**: Graceful error handling to protect user flows
+- **Responsive Design**: Mobile-friendly interface for investors and asset owners
 
 ### Environment Variables
 
