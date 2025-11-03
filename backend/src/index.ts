@@ -36,7 +36,7 @@ app.use(helmet());
 
 // CORS
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? process.env.CORS_ORIGIN : 'http://localhost:3600',
+  origin: process.env.NODE_ENV === 'production' ? process.env.CORS_ORIGIN?.split(' ') : 'http://localhost:3600',
   credentials: true
 }));
 
