@@ -1,0 +1,258 @@
+/* Property Table - Ramp Style */
+.property-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+}
+
+.property-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.property-table thead {
+  background: #f7f8fa;
+  border-bottom: 1px solid #e8e9ed;
+}
+
+.property-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #62677b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.property-table tbody tr {
+  border-bottom: 1px solid #e8e9ed;
+  transition: background-color 0.2s;
+}
+
+.property-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.property-table tbody tr.property-table-row-selected {
+  background: #f0f4ff;
+}
+
+.property-table td {
+  padding: 16px;
+  font-size: 0.95rem;
+  color: #1e1e1e;
+  vertical-align: middle;
+}
+
+/* Checkbox Column */
+.property-table-checkbox {
+  width: 48px;
+  padding: 16px;
+}
+
+.property-table-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #1e1e1e;
+}
+
+/* Merchant/Property Column */
+.property-table-merchant {
+  min-width: 300px;
+}
+
+.property-table-merchant-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.property-table-merchant-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+  flex-shrink: 0;
+}
+
+.property-table-merchant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.property-table-merchant-name {
+  font-weight: 600;
+  color: #1e1e1e;
+  margin-bottom: 4px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.property-table-merchant-desc {
+  font-size: 0.85rem;
+  color: #62677b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.property-table-merchant-check {
+  color: #1e1e1e;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Date Column */
+.property-table-date {
+  min-width: 120px;
+  color: #62677b;
+  font-size: 0.9rem;
+}
+
+/* Amount/Price Column */
+.property-table-amount {
+  min-width: 140px;
+  font-weight: 600;
+  color: #1e1e1e;
+}
+
+/* Location Column */
+.property-table-location {
+  min-width: 150px;
+  color: #62677b;
+  font-size: 0.9rem;
+}
+
+/* Category Column */
+.property-table-category {
+  min-width: 120px;
+  color: #62677b;
+  font-size: 0.9rem;
+}
+
+/* Quantity Column */
+.property-table-quantity {
+  min-width: 100px;
+  text-align: center;
+  color: #1e1e1e;
+  font-weight: 500;
+}
+
+/* Actions Column */
+.property-table-actions {
+  min-width: 140px;
+}
+
+.property-table-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.property-table-action-status {
+  color: #62677b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.property-table-action-btn {
+  background: transparent;
+  border: 1px solid #e8e9ed;
+  color: #1e1e1e;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+
+.property-table-action-btn:hover {
+  background: #f7f8fa;
+  border-color: #d4d7df;
+}
+
+.property-table-list-btn {
+  border-color: #1e1e1e;
+}
+
+.property-table-list-btn:hover {
+  background: #1e1e1e;
+  color: #ffffff;
+}
+
+.property-table-buy-btn {
+  background: #1e1e1e;
+  color: #ffffff;
+  border-color: #1e1e1e;
+}
+
+.property-table-buy-btn:hover {
+  background: #383d51;
+  border-color: #383d51;
+}
+
+/* Empty State */
+.property-table-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: #62677b;
+  font-size: 1.125rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .property-table {
+    font-size: 0.9rem;
+  }
+
+  .property-table th,
+  .property-table td {
+    padding: 12px;
+  }
+
+  .property-table-merchant {
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .property-table-wrapper {
+    overflow-x: scroll;
+  }
+
+  .property-table {
+    min-width: 800px;
+  }
+
+  .property-table th,
+  .property-table td {
+    padding: 10px 8px;
+    font-size: 0.85rem;
+  }
+
+  .property-table-merchant-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .property-table-action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .property-table-action-btn {
+    width: 100%;
+    padding: 8px;
+  }
+}
+

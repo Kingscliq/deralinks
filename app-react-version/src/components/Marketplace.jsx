@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { buyAsset, getAllListedAssets } from '../api/mockApi';
 
-import NFTCard from './NFTCard';
+import PropertiesPage from './PropertiesPage';
 import PurchaseModal from './PurchaseModal';
 import { useNotification } from '../context/NotificationContext.jsx';
 
@@ -32,20 +32,6 @@ const Marketplace = ({ accountId }) => {
       });
     }
     setLoading(false);
-  };
-
-  const formatPrice = asset => {
-    if (!asset) return '';
-    const price = asset.price || asset.pricePerNFT;
-    if (price === undefined || price === null) return 'Not specified';
-    const currency = (asset.priceCurrency || 'USD').toUpperCase();
-    const numericPrice = Number(price);
-    const priceValue = Number.isFinite(numericPrice)
-      ? numericPrice.toLocaleString()
-      : price;
-    return currency === 'HBAR'
-      ? `${priceValue} ℏ`
-      : `${currency} ${priceValue}`;
   };
 
   const handleBuy = listing => {
@@ -100,10 +86,6 @@ const Marketplace = ({ accountId }) => {
     setPurchasingListing(null);
   };
 
-  if (loading) {
-    return <div className="loading">Loading marketplace...</div>;
-  }
-
   const handleView = asset => {
     const params = new URLSearchParams({ tokenId: asset.tokenId });
     const serialNumber = asset.serialNumber ?? asset.serialNumbers?.[0];
@@ -113,37 +95,55 @@ const Marketplace = ({ accountId }) => {
     window.location.hash = `#/asset?${params.toString()}`;
   };
 
+  if (loading) {
+    return <div className="loading">Loading marketplace...</div>;
+  }
+
+  // Filter function for marketplace tabs
+  const marketplaceTabFilter = (properties, tabKey) => {
+    if (tabKey === 'overview') {
+      return properties;
+    } else if (tabKey === 'ready_to_sync') {
+      // All active listings (all marketplace items are ready to sync/buy)
+      return properties;
+    } else if (tabKey === 'needs_review') {
+      // Listings that might need review (missing info, price, etc.)
+      return properties.filter(p => {
+        const hasName = p?.name || p?.propertyName;
+        const hasPrice = p?.price || p?.pricePerNFT;
+        const hasImages = Array.isArray(p?.images) && p.images.length > 0;
+        return !hasName || !hasPrice || !hasImages;
+      });
+    } else if (tabKey === 'waiting') {
+      // Listings waiting for something (e.g., pending approval)
+      return properties.filter(p => p.status === 'pending' || p.status === 'waiting');
+    }
+    return properties;
+  };
+
+  const tabs = [
+    { key: 'overview', label: 'Overview', count: null },
+    { key: 'needs_review', label: 'Needs review', count: null },
+    { key: 'ready_to_sync', label: 'Ready to sync', count: null },
+    { key: 'waiting', label: 'Waiting for cardholder', count: null },
+  ];
+
   return (
     <div className="marketplace-container">
-      <div className="section-header">
-        <h2>Assets Marketplace</h2>
-        <p className="section-subtitle">
-          Discover and trade tokenized assets on Hedera
-        </p>
-      </div>
-
-      {meta?.total !== undefined && (
-        <div className="section-subtitle" style={{ marginBottom: 16 }}>
-          {meta.total} listings available
-        </div>
-      )}
-
-      {listings.length === 0 ? (
-        <div className="empty-state">
-          <p>No items listed yet</p>
-        </div>
-      ) : (
-        <div className="nft-grid">
-          {listings.map(listing => (
-            <NFTCard
-              key={listing.listingId}
-              asset={listing}
-              onView={handleView}
-              onBuy={handleBuy}
-            />
-          ))}
-        </div>
-      )}
+      <PropertiesPage
+        properties={listings}
+        onBuy={handleBuy}
+        onView={handleView}
+        title="Assets Marketplace"
+        tabs={tabs}
+        defaultTab="overview"
+        showViewToggle={false}
+        showSearch={true}
+        showSettings={true}
+        emptyMessage="No items listed yet"
+        tabFilterFunction={marketplaceTabFilter}
+        defaultViewMode="grid"
+      />
 
       {purchasingListing && (
         <PurchaseModal

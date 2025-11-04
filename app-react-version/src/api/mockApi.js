@@ -495,9 +495,19 @@ const mapProperty = property => {
 const mapListing = listing => {
     const property = listing?.property || {};
     const images = ensureArray(property?.images || listing?.images);
-    const features = ensureObject(property?.features);
-    const amenities = ensureArray(property?.amenities);
+    const features = ensureObject(listing?.features || property?.features);
+    const amenities = ensureArray(listing?.amenities || property?.amenities);
     const image = normalizeImage(images.length ? images : undefined);
+
+    // API response has propertyName, city, country directly on listing
+    const propertyName = listing?.propertyName || property?.propertyName || listing?.title;
+    const city = listing?.city || property?.city;
+    const country = listing?.country || property?.country;
+    const propertyType = listing?.propertyType || property?.propertyType;
+    const totalSupply = listing?.totalSupply || property?.totalSupply;
+    const totalValue = listing?.propertyTotalValue || listing?.totalValue || property?.totalValue;
+    const expectedAnnualReturn = listing?.expectedAnnualReturn || property?.expectedAnnualReturn;
+    const rentalYield = listing?.rentalYield || property?.rentalYield;
 
     return {
         listingId: listing?.listingId || listing?.id,
@@ -506,33 +516,43 @@ const mapListing = listing => {
         quantity:
             listing?.quantity ||
             (listing?.serialNumbers ? listing.serialNumbers.length : 0),
-        name: property?.propertyName || listing?.title,
+        name: propertyName,
+        propertyName: propertyName, // Also expose as propertyName for consistency
         description: listing?.description || property?.description,
         image,
         price: listing?.pricePerNFT ?? listing?.price ?? 0,
+        pricePerNFT: listing?.pricePerNFT ?? listing?.price ?? 0,
         priceCurrency: listing?.currency || 'USD',
         totalPrice: listing?.totalPrice,
         seller: listing?.seller?.hederaAccount || listing?.sellerHederaAccount,
         metadata: {
-            assetType: property?.propertyType,
-            location: [property?.city, property?.country].filter(Boolean).join(', '),
-            fractions: property?.totalSupply,
-            expectedAnnualReturn: toPercent(property?.expectedAnnualReturn),
-            rentalYield: toPercent(property?.rentalYield),
+            assetType: propertyType,
+            location: [city, country].filter(Boolean).join(', '),
+            fractions: totalSupply,
+            expectedAnnualReturn: toPercent(expectedAnnualReturn),
+            rentalYield: toPercent(rentalYield),
         },
         attributes: {
-            valuation: formatDisplayValue(property?.totalValue),
+            valuation: formatDisplayValue(totalValue),
             tokenPrice: formatDisplayValue(listing?.pricePerNFT),
             quantity: listing?.quantity,
         },
         property: {
             ...property,
+            propertyName,
+            city,
+            country,
+            propertyType,
+            totalSupply,
+            totalValue,
             features,
             amenities,
             images,
         },
+        city: city, // Expose directly for easier access
+        country: country,
         status: listing?.status,
-        createdAt: listing?.createdAt,
+        createdAt: listing?.createdAt || listing?.listedAt,
         expiresAt: listing?.expiresAt,
         isListed: true,
     };

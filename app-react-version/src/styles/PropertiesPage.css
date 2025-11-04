@@ -1,0 +1,321 @@
+/* Properties Page - Ramp Style */
+.properties-page {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 0;
+}
+
+/* Header Section */
+.properties-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e8e9ed;
+}
+
+.properties-page-title-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.properties-page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.properties-page-count {
+  color: #62677b;
+  font-weight: 500;
+}
+
+.properties-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.properties-page-settings-btn {
+  background: transparent;
+  border: 1px solid #e8e9ed;
+  color: #1e1e1e;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.properties-page-settings-btn:hover {
+  background: #f7f8fa;
+  border-color: #d4d7df;
+}
+
+.properties-page-sync-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid transparent;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.properties-page-sync-btn:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Tabs Section */
+.properties-page-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 32px;
+  border-bottom: 1px solid #e8e9ed;
+  background: #ffffff;
+}
+
+.properties-page-tab {
+  background: transparent;
+  border: none;
+  color: #62677b;
+  padding: 16px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+.properties-page-tab:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.properties-page-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: transparent;
+  font-weight: 700;
+}
+
+.properties-page-tab-count {
+  color: #62677b;
+  font-weight: 500;
+}
+
+/* Toolbar Section */
+.properties-page-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  border-bottom: 1px solid #e8e9ed;
+  background: #ffffff;
+}
+
+.properties-page-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f7f8fa;
+  border: 1px solid #e8e9ed;
+  border-radius: 8px;
+  padding: 8px 12px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.properties-page-search-icon {
+  font-size: 16px;
+  color: #62677b;
+}
+
+.properties-page-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #1e1e1e;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+}
+
+.properties-page-search-input::placeholder {
+  color: #8e92a3;
+}
+
+.properties-page-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.properties-page-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f7f8fa;
+  border: 1px solid #e8e9ed;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.properties-page-view-btn {
+  background: transparent;
+  border: none;
+  color: #62677b;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.properties-page-view-btn:hover {
+  background: #eceef1;
+  color: #1e1e1e;
+}
+
+.properties-page-view-btn.active {
+  background: #ffffff;
+  color: #1e1e1e;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.properties-page-view-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 16px;
+  color: #62677b;
+  opacity: 0.6;
+}
+
+.properties-page-filter-btn,
+.properties-page-sort-btn,
+.properties-page-options-btn {
+  background: transparent;
+  border: 1px solid #e8e9ed;
+  color: #62677b;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.properties-page-filter-btn:hover,
+.properties-page-sort-btn:hover,
+.properties-page-options-btn:hover {
+  background: #f7f8fa;
+  border-color: #d4d7df;
+  color: #1e1e1e;
+}
+
+/* Content Section */
+.properties-page-content {
+  padding: 0;
+  min-height: 400px;
+  background: #ffffff;
+}
+
+.properties-page-content .property-table-wrapper {
+  background: #ffffff;
+}
+
+.properties-page-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: #62677b;
+  font-size: 1.125rem;
+}
+
+.properties-page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 24px 32px;
+}
+
+/* Footer Section */
+.properties-page-footer {
+  padding: 16px 32px;
+  border-top: 1px solid #e8e9ed;
+  background: #ffffff;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.properties-page-footer-text {
+  color: #62677b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .properties-page-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 20px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .properties-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+  }
+
+  .properties-page-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .properties-page-tabs {
+    padding: 0 24px;
+    overflow-x: auto;
+  }
+
+  .properties-page-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 24px;
+  }
+
+  .properties-page-search {
+    max-width: 100%;
+  }
+
+  .properties-page-toolbar-right {
+    justify-content: flex-end;
+  }
+
+  .properties-page-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    padding: 16px 20px;
+  }
+
+  .properties-page-footer {
+    padding: 12px 20px;
+  }
+}
+

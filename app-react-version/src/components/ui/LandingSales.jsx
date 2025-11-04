@@ -17,13 +17,14 @@ import {
 } from 'lucide-react';
 
 import React from 'react';
+import '../../styles/LandingSales.css';
 
 const Section = ({ id, kicker, title, subtitle, children }) => (
-  <section id={id} className="sales-section">
-    {kicker ? <div className="section-kicker">{kicker}</div> : null}
-    {title ? <h2 className="section-title">{title}</h2> : null}
+  <section id={id} className="modern-sales-section">
+    {kicker ? <div className="modern-section-kicker">{kicker}</div> : null}
+    {title ? <h2 className="modern-section-title">{title}</h2> : null}
     {subtitle ? (
-      <p className="section-subtitle" style={{ marginBottom: 24 }}>
+      <p className="modern-section-subtitle">
         {subtitle}
       </p>
     ) : null}
@@ -32,20 +33,20 @@ const Section = ({ id, kicker, title, subtitle, children }) => (
 );
 
 const StatCard = ({ label, value, note }) => (
-  <div className="stat-card">
-    <div className="stat-value">{value}</div>
-    <div className="stat-label">{label}</div>
-    {note ? <div className="stat-note">{note}</div> : null}
+  <div className="modern-stat-card">
+    <div className="modern-stat-value">{value}</div>
+    <div className="modern-stat-label">{label}</div>
+    {note ? <div className="modern-stat-note">{note}</div> : null}
   </div>
 );
 
 const Feature = ({ icon: Icon, color = '#EAEFFB', title, desc }) => (
-  <div className="feature-card">
-    <div className="icon-badge" style={{ background: color }} aria-hidden>
-      <Icon size={18} color="#1e1e1e" />
+  <div className="modern-feature-card">
+    <div className="modern-icon-badge" aria-hidden>
+      <Icon size={24} color="#ffffff" />
     </div>
-    <div className="feature-title">{title}</div>
-    <div className="feature-desc">{desc}</div>
+    <div className="modern-feature-title">{title}</div>
+    <div className="modern-feature-desc">{desc}</div>
   </div>
 );
 
@@ -56,10 +57,10 @@ const LandingSales = () => {
   };
 
   return (
-    <div className="sales-wrap">
+    <div className="modern-sales-wrap">
       {/* Key metrics */}
       <Section id="metrics" kicker="Platform Metrics">
-        <div className="sales-grid cols-3">
+        <div className="modern-sales-grid cols-3">
           <StatCard label="Total Value Locked" value="₦45.2B" />
           <StatCard label="Assets Tokenized" value="1,247" />
           <StatCard label="Active Investors" value="12.4K" />
@@ -72,7 +73,7 @@ const LandingSales = () => {
         kicker="How It Works"
         title="Tokenize any asset in four simple steps"
       >
-        <div className="sales-grid cols-4">
+        <div className="modern-sales-grid cols-4">
           <Feature
             icon={Upload}
             color="#EAF3FF"
@@ -98,7 +99,7 @@ const LandingSales = () => {
             desc="Holders vote on decisions and receive automated income distributions."
           />
         </div>
-        <p className="section-footnote">
+        <p className="modern-section-footnote">
           Average tokenization time: 48–72 hours
         </p>
       </Section>
@@ -109,7 +110,7 @@ const LandingSales = () => {
         kicker="Diverse Asset Classes"
         title="Access institutional‑grade opportunities"
       >
-        <div className="sales-grid cols-3">
+        <div className="modern-sales-grid cols-3">
           <Feature
             icon={Building2}
             color="#EAF3FF"
@@ -137,7 +138,7 @@ const LandingSales = () => {
         kicker="Enterprise‑Grade Platform"
         subtitle="Built for institutions with retail accessibility"
       >
-        <div className="sales-grid cols-4">
+        <div className="modern-sales-grid cols-4">
           <Feature
             icon={Package2}
             color="#EAF3FF"
@@ -187,7 +188,7 @@ const LandingSales = () => {
             desc="Accurate, real‑time price models."
           />
         </div>
-        <div className="sales-grid cols-3" style={{ marginTop: 16 }}>
+        <div className="modern-sales-grid cols-3" style={{ marginTop: 16 }}>
           <StatCard label="Platform uptime" value="99.9%" />
           <StatCard label="Txn speed" value="<2s" />
           <StatCard label="Avg gas fee" value="₦0.05" />
@@ -196,10 +197,10 @@ const LandingSales = () => {
 
       {/* Built for everyone */}
       <Section id="personas" kicker="Built For Everyone">
-        <div className="sales-grid cols-2">
-          <div className="persona-card">
-            <div className="persona-title">For Investors</div>
-            <ul className="persona-list">
+        <div className="modern-sales-grid cols-2">
+          <div className="modern-persona-card">
+            <div className="modern-persona-title">For Investors</div>
+            <ul className="modern-persona-list">
               <li>Access premium assets with low minimums</li>
               <li>Instant liquidity on a 24/7 market</li>
               <li>Automated income distributions</li>
@@ -207,13 +208,13 @@ const LandingSales = () => {
               <li>Diversify across asset classes</li>
               <li>Transparent blockchain ownership</li>
             </ul>
-            <button className="cta-inline" onClick={clickConnect}>
+            <button className="modern-cta-inline" onClick={clickConnect}>
               Start Investing
             </button>
           </div>
-          <div className="persona-card">
-            <div className="persona-title">For Asset Owners</div>
-            <ul className="persona-list">
+          <div className="modern-persona-card">
+            <div className="modern-persona-title">For Asset Owners</div>
+            <ul className="modern-persona-list">
               <li>Unlock liquidity from illiquid assets</li>
               <li>Maintain partial ownership & control</li>
               <li>Access a global investor pool</li>
@@ -221,7 +222,7 @@ const LandingSales = () => {
               <li>Transparent on‑chain governance</li>
               <li>Instant settlement and access to funds</li>
             </ul>
-            <button className="cta-inline" onClick={clickConnect}>
+            <button className="modern-cta-inline" onClick={clickConnect}>
               Tokenize your asset
             </button>
           </div>
@@ -234,7 +235,7 @@ const LandingSales = () => {
         kicker="Security & Compliance"
         subtitle="Enterprise‑grade security meets regulatory compliance"
       >
-        <div className="sales-grid cols-4">
+        <div className="modern-sales-grid cols-4">
           <Feature
             icon={Lock}
             color="#EAF3FF"
@@ -268,7 +269,7 @@ const LandingSales = () => {
         kicker="Frequently Asked Questions"
         subtitle="Everything you need to know about RWA tokenization"
       >
-        <div className="faq-list">
+        <div className="modern-faq-list">
           <details>
             <summary>What is RWA tokenization?</summary>
             <p>
