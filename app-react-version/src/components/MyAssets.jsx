@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAssetsByWallet, getProperties, listAsset } from '../api/mockApi';
 
 import ListingModal from './ListingModal';
-import NFTCard from './NFTCard';
+import PropertiesPage from './PropertiesPage';
 import { useNotification } from '../context/NotificationContext.jsx';
 
 const parseAmount = value => {
@@ -288,13 +288,53 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
     return <div className="loading">Loading your assets...</div>;
   }
 
+  const handleView = asset => {
+    const params = new URLSearchParams({ tokenId: asset.tokenId });
+    const serialNumber = asset.serialNumber ?? asset.serialNumbers?.[0];
+    if (serialNumber !== undefined && serialNumber !== null) {
+      params.set('serialNumber', serialNumber);
+    }
+    window.location.hash = `#/asset?${params.toString()}`;
+  };
+
+  // Filter function for MyAssets tabs
+  const myAssetsTabFilter = (properties, tabKey) => {
+    if (tabKey === 'overview') {
+      return properties;
+    } else if (tabKey === 'ready_to_sync') {
+      // Assets that are already listed (ready to sync)
+      return properties.filter(a => a.isListed === true);
+    } else if (tabKey === 'needs_review') {
+      // Assets that might need review (missing info)
+      return properties.filter(a => {
+        const hasName = a?.name || a?.propertyName;
+        const hasPrice = a?.price || a?.pricePerNFT;
+        const hasImages = Array.isArray(a?.images) && a.images.length > 0;
+        const hasSerialNumbers = Array.isArray(a?.serialNumbers) && a.serialNumbers.length > 0;
+        return !hasName || !hasPrice || !hasImages || !hasSerialNumbers;
+      });
+    } else if (tabKey === 'waiting') {
+      // Assets waiting to be listed (have quantity but not listed)
+      return properties.filter(a => a.isListed === false && (a.quantity > 0 || (Array.isArray(a?.serialNumbers) && a.serialNumbers.length > 0)));
+    }
+    return properties;
+  };
+
+  const tabs = [
+    { key: 'overview', label: 'Overview', count: null },
+    { key: 'needs_review', label: 'Needs review', count: null },
+    { key: 'ready_to_sync', label: 'Ready to sync', count: null },
+    { key: 'waiting', label: 'Waiting for cardholder', count: null },
+  ];
+
+  const emptyMessage = mergedAssets.length === 0
+    ? (summary?.totalNFTs
+        ? `We detected ${summary.totalNFTs} NFT(s) for this account. Newly minted collections may take a few minutes to appear from the Hedera mirror node.`
+        : 'Mint an asset to see it here once the blockchain confirms ownership.')
+    : 'No assets found yet.';
+
   return (
     <div className="my-assets-container">
-      <div className="section-header">
-        <h2>My Assets</h2>
-        <p className="section-subtitle">Manage and list your assets</p>
-      </div>
-
       {metricCards.length > 0 && (
         <div
           className="portfolio-summary"
@@ -356,35 +396,30 @@ const MyAssets = ({ accountId, localHoldings = [] }) => {
         </div>
       )}
 
-      {mergedAssets.length === 0 ? (
-        <div className="empty-state">
-          <p>No assets found yet.</p>
-          {summary?.totalNFTs ? (
-            <p style={{ marginTop: 8 }}>
-              We detected {summary.totalNFTs} NFT(s) for this account. Newly
-              minted collections may take a few minutes to appear from the
-              Hedera mirror node.
-            </p>
-          ) : (
-            <p style={{ marginTop: 8 }}>
-              Mint an asset to see it here once the blockchain confirms
-              ownership.
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="nft-grid">
-          {mergedAssets.map(asset => (
-            <NFTCard
-              key={`${asset.tokenId}-${
-                asset.id || asset.serialNumbers?.join('-') || 'holding'
-              }`}
-              asset={asset}
-              onList={!asset.isListed ? handleList : null}
-            />
-          ))}
-        </div>
-      )}
+      <PropertiesPage
+        properties={mergedAssets}
+        onList={(asset) => {
+          if (!asset?.serialNumbers || asset.serialNumbers.length === 0) {
+            showNotification({
+              type: 'error',
+              title: 'Listing unavailable',
+              message: 'No NFT serial numbers available for this asset.',
+            });
+            return;
+          }
+          handleList(asset);
+        }}
+        onView={handleView}
+        title="My Assets"
+        tabs={tabs}
+        defaultTab="overview"
+        showViewToggle={true}
+        showSearch={true}
+        showSettings={true}
+        emptyMessage={emptyMessage}
+        tabFilterFunction={myAssetsTabFilter}
+        defaultViewMode="table"
+      />
 
       {listingAsset && (
         <ListingModal

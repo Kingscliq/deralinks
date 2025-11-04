@@ -51,8 +51,8 @@ body {
   padding: 0;
   margin: 0;
   min-height: 100vh;
-  overflow: hidden; /* stop scroll on landing */
-  background: linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
+  overflow-x: hidden;
+  background: #0a0a0f;
 }
 
 .App.main {
@@ -347,6 +347,12 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
+.App.landing .app-header {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .header-left {
   display: flex;
   align-items: center;
@@ -360,30 +366,14 @@ body {
   letter-spacing: -0.02em;
 }
 
+.App.landing .app-title {
+  color: #ffffff;
+}
+
 .header-right {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-/* Tooltip for copy feedback */
-.tooltip-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-.tooltip-bubble {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1e1e1e;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .account-btn {
@@ -399,9 +389,21 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+.App.landing .account-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
 .account-btn:hover {
   background: #eceef1;
   border-color: #d4d7df;
+}
+
+.App.landing .account-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .account-id-display {
@@ -410,35 +412,60 @@ body {
   color: #383d51;
 }
 
+.App.landing .account-id-display {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .disconnect-btn {
-  background: #1e1e1e; /* match CTA style */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   color: #ffffff;
   padding: 14px 22px;
-  border-radius: 999px;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
-  box-shadow: 0 8px 20px rgba(30, 30, 30, 0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  font-family: 'Inter', sans-serif;
 }
 
 .disconnect-btn:hover {
-  background: #000000;
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(30, 30, 30, 0.28);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
-/* Navigation Tabs - Aave Style */
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltip-bubble {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Navigation Tabs - Modern Theme */
 .nav-tabs {
   display: flex;
   gap: 0;
   padding: 0 48px;
   background: #ffffff;
-  border-bottom: 1px solid #e8e9ed;
+  border-bottom: 2px solid #e8e9ed;
 }
 
 .nav-tab {
@@ -456,14 +483,15 @@ body {
 }
 
 .nav-tab:hover {
-  color: #1e1e1e;
-  background: #fafbfc;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
 }
 
 .nav-tab.active {
-  color: #1e1e1e;
-  border-bottom-color: #1e1e1e;
+  color: #667eea;
+  border-bottom-color: #667eea;
   background: transparent;
+  font-weight: 700;
 }
 
 /* Main Content */
