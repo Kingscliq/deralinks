@@ -1,184 +1,570 @@
-# DeraLinks Platform
+# DeraLinks - Real Estate Tokenization Platform
 
-DeraLinks is a full-stack platform for tokenizing real-world properties on Hedera Hashgraph, managing secondary-market listings, and exposing investor tooling through a web dashboard. The repository contains both the backend API and the React-based frontend.
-
----
-
-## Table of Contents
-
-1. [Repository Layout](#repository-layout)
-2. [Backend API (`backend/`)](#backend-api-backend)
-   - [Tech Stack](#tech-stack)
-   - [Key Features](#key-features)
-   - [Local Development](#local-development)
-   - [Environment Variables](#environment-variables)
-   - [Database Schema](#database-schema)
-   - [API Documentation](#api-documentation)
-3. [Frontend App (`app-react-version/`)](#frontend-app-app-react-version)
-   - [Tech Stack](#tech-stack-1)
-   - [Core Flows](#core-flows)
-   - [Local Development](#local-development-1)
-   - [Environment Variables](#environment-variables-1)
-   - [Build & Deployment](#build--deployment)
-4. [Shared Workflows](#shared-workflows)
-5. [Troubleshooting & Tips](#troubleshooting--tips)
-6. [Additional References](#additional-references)
+DeraLinks is a platform that helps physical-asset owners fractionalize ownership of their assets by issuing tradable digital fractions. Individuals can acquire, hold, and trade these fractional shares, fostering shared prosperity. Built on a DAG-based distributed ledger (Hedera), DeraLinks provides end-to-end tooling for asset issuance, custody, and a peer marketplace.
 
 ---
 
-## Repository Layout
+## 🏗️ Project Structure
 
-```text
+```
 deralinks/
-├── backend/                # Express + PostgreSQL backend API (TypeScript)
-├── app-react-version/      # React 17 investor dashboard (Create React App)
-├── database/               # SQL schema & migrations
-├── Dockerfile              # Backend container definition
-├── render.yaml             # Render deployment config
-├── backend/API-*.md        # API documentation bundle
-└── miscellaneous docs      # Deployment, environment, and ops guides
+├── backend/                    # Node.js/Express API server
+├── app-react-version/          # React frontend application
+├── hedera-setup/              # DAG ledger setup utilities
+└── README.md                  # This file
 ```
 
 ---
 
-## Backend API (`backend/`)
+## 🎯 Overview
+
+DeraLinks is focused on enabling asset owners to fractionalize properties and physical assets, and on giving investors simple, secure access to buy and manage fractions of those assets. Core capabilities include:
+
+- **Asset Fractionalization**: Enable owners to split an asset into tradable digital fractions (NFT-backed shares) so they can raise capital while retaining governance
+- **Investor Access & Custody**: Allow individuals to purchase, hold, and manage fractional ownership with verifiable provenance and ownership metadata
+- **Marketplace**: A peer marketplace to list, discover, and trade fractional shares with clear pricing and settlement
+- **Wallet Integration**: Secure wallet pairing via HashConnect for custody and transaction signing
+- **IPFS Storage**: Immutable storage for images, contracts, and provenance metadata via Pinata
+
+---
+
+## 🔧 Backend (`/backend`)
 
 ### Tech Stack
 
-- **Runtime:** Node.js 18+, Express
-- **Language:** TypeScript (compiled via `ts-node` in dev, bundled for prod)
-- **Database:** PostgreSQL (schema + migrations stored in `/database`)
-- **Blockchain:** Hedera Hashgraph via `@hashgraph/sdk`
-- **Storage:** IPFS (Pinata) for media/documents
-- **Job Runner:** Scheduler service for blockchain/mirror-node sync
+- **Runtime**: Node.js v18+
+- **Framework**: Express.js
+- **Database**: PostgreSQL 14+
+- **Ledger / SDK**: Hedera (DAG-based ledger) via @hashgraph/sdk
+- **Storage**: Pinata (IPFS)
+- **Validation**: Express Validator
+- **CORS**: Configured for frontend integration
 
 ### Key Features
 
-- **Property Minting:** Create Hedera NFT collections representing fractional ownership, with metadata pushed to IPFS.
-- **Marketplace:** List NFTs for sale, manage offers, execute purchases.
-- **Investor Holdings:** Aggregate holdings from Hedera mirror node + internal DB to provide portfolio insights.
-- **DAO Module:** Allow property-level governance (proposals, votes, execution).
-- **Verification Workflows:** KYC/property owner processes tied to verification NFTs.
-- **File Uploads:** Proxy uploads to IPFS (Pinata) for images and documents.
+- **Property Management & Fractionalization**: Create tokenized property collections and issue fractional ownership units that represent shares in a physical asset
+- **Marketplace API**: List fractional shares for sale, handle offers, and manage settlement and order lifecycle
+- **File Uploads**: Upload property images and legal documents to IPFS for immutable provenance and evidence
+- **Investor Holdings**: Track fractional holdings (share counts and percentages) and metadata via the Hedera mirror node
+- **Transaction Processing**: Create collections, mint fractional units, and handle ledger transfers and settlements
+- **Error Handling**: Comprehensive error codes and validation for production-grade reliability
+
+### Environment Variables
+
+```env
+# Server
+PORT=3600
+NODE_ENV=production
+
+# Database
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# Hedera Configuration
+HEDERA_NETWORK=testnet
+OPERATOR_ID=0.0.xxxxx
+OPERATOR_KEY=302...
+TREASURY_ACCOUNT_ID=0.0.xxxxx
+TREASURY_PRIVATE_KEY=302...
+
+# IPFS (Pinata)
+PINATA_JWT=your_pinata_jwt
+PINATA_GATEWAY_URL=https://gateway.pinata.cloud
+
+# CORS
+FRONTEND_URL=https://your-frontend.vercel.app
+```
+
+### API Documentation
+
+Comprehensive API documentation available at:
+
+- `backend/API-DOCUMENTATION.md` - Full endpoint reference
+- `backend/API-SCHEMAS.md` - Request/response schemas
+
+### Key Endpoints
+
+```
+POST   /api/v1/properties/mint          # Mint new property NFTs
+GET    /api/v1/properties                # List all properties
+GET    /api/v1/users/:accountId/assets   # Get user's NFT holdings
+POST   /api/v1/marketplace/list          # List NFTs for sale
+GET    /api/v1/marketplace/listings      # Get marketplace listings
+POST   /api/v1/marketplace/buy           # Purchase NFTs
+POST   /api/v1/files/upload              # Upload file to IPFS
+POST   /api/v1/files/upload-multiple     # Upload multiple files
+```
 
 ### Local Development
 
 ```bash
 cd backend
 npm install
-npm run dev   # Starts API on http://localhost:3600
+cp .env.example .env  # Configure environment variables
+npm run dev           # Start development server on port 3600
 ```
 
-### Environment Variables
+### Deployment
 
-Create `backend/.env` (see `ENV-SETUP-SUMMARY.md` for full list):
-
-```
-PORT=3600
-DATABASE_URL=postgres://user:password@localhost:5432/deralinks
-OPERATOR_ID=0.0.xxxxxxx
-OPERATOR_KEY=302e...
-TREASURY_ACCOUNT_ID=0.0.xxxxxxx
-FEE_COLLECTOR_ACCOUNT_ID=0.0.xxxxxxx
-PINATA_JWT=eyJ...
-HEDERA_NETWORK=testnet
-```
-
-> **Note:** The configured Hedera operator/treasury accounts must maintain sufficient HBAR. Mint/list requests return `INSUFFICIENT_PAYER_BALANCE` otherwise.
-
-### Database Schema
-
-- Base schema: `database/schema.sql`
-- Migrations: `database/migrations/`
-- Init scripts: `database/init/`
-
-### API Documentation
-
-- `backend/API-DOCUMENTATION.md` – full reference with sample payloads.
-- `backend/API-QUICK-REFERENCE.md` – endpoint cheat sheet.
-- `backend/API-SCHEMAS.md` – JSON schema catalogue.
-- `POSTMAN-COLLECTION.json` – importable testing collection.
+- **Platform**: Render.com (or any Node.js hosting)
+- **Database**: PostgreSQL managed service
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
 
 ---
 
-## Frontend App (`app-react-version/`)
+## 💻 Frontend (`/app-react-version`)
 
 ### Tech Stack
 
-- **Framework:** React 17 (Create React App / `react-scripts@5`)
-- **Language:** JavaScript (ES2020+)
-- **State Management:** React hooks + Context API
-- **HTTP Client:** Axios
-- **Wallet Connector:** HashConnect (HashPack/Blade support)
+- **Framework**: React 17 (Create React App)
+  - _Note: React 17 is used due to HashConnect v0.2.9 compatibility. The wallet library is not compatible with React 18+. Upgrading would require migrating to a newer HashConnect version or alternative wallet connector._
+- **Language**: JavaScript (ES2020+)
+- **State Management**: React hooks + Context API
+- **HTTP Client**: Axios
+- **Wallet Integration**: HashConnect v0.2.9 (HashPack/Blade support)
+- **Styling**: CSS3 with modern features
 
-### Core Flows
+### Key Features
 
-- **Wallet Connection:** Secure pairing with HashConnect; stores pairing info locally.
-- **Tokenize Asset:** Upload media/docs to IPFS, assemble mint payload, invoke backend mint endpoint.
-- **My Assets:** Display holdings sourced from Hedera mirror node + recently minted local cache.
-- **Marketplace:** Browse listings, list owned NFTs, buy/sell on secondary market.
-- **My Listings:** Surface listings created by the connected wallet (filters by seller account).
+- **Wallet Connection**: Secure pairing with Hedera wallets via HashConnect for custody and signing
+- **Asset Fractionalization UI**: Guided flows for asset owners to create tokenized collections and issue fractional shares
+- **My Holdings**: Investors can view fractional holdings with share counts, percentages, and provenance metadata
+- **Marketplace**: Browse and purchase fractional shares with clear listings, price history, and settlement details
+- **Listing Management**: Owners and holders can list fractional shares for sale and manage orders
+- **Purchase Flow**: Support fractional quantity purchases, settlement receipts, and transaction history
+- **Error Boundaries**: Graceful error handling to protect user flows
+- **Responsive Design**: Mobile-friendly interface for investors and asset owners
+
+### Environment Variables
+
+```env
+REACT_APP_API_BASE_URL=https://your-backend-api.com/api/v1
+REACT_APP_HASHCONNECT_NETWORK=testnet
+```
+
+### Core Components
+
+```
+src/
+├── components/
+│   ├── hedera/
+│   │   └── walletConnect.js      # HashConnect wallet integration
+│   ├── ui/
+│   │   ├── Header.jsx            # Navigation header
+│   │   ├── Hero.jsx              # Landing hero section
+│   │   └── ConnectPrompt.jsx    # Wallet connection prompt
+│   ├── Marketplace.jsx           # Browse listings
+│   ├── MyAssets.jsx              # User's owned NFTs
+│   ├── MyListings.jsx            # User's active listings
+│   ├── MintForm.jsx              # Tokenize new assets
+│   ├── NFTCard.jsx               # NFT display card
+│   └── AssetDetails.jsx          # Asset detail view
+├── api/
+│   └── mockApi.js                # API client & error handling
+├── context/
+│   └── NotificationContext.jsx   # Global notifications
+└── styles/                        # Component styles
+```
 
 ### Local Development
 
 ```bash
 cd app-react-version
 npm install
-npm start   # HTTPS-enabled dev server at https://localhost:3000/
+npm start  # HTTPS dev server at https://localhost:3000
 ```
 
-### Environment Variables
-
-Optional `app-react-version/.env` overrides:
-
-```
-REACT_APP_API_BASE_URL=https://backend-host/api/v1
-REACT_APP_HASHCONNECT_NETWORK=testnet
-```
+**Note**: HTTPS is required for HashConnect wallet integration, even in development.
 
 ### Build & Deployment
 
-- `npm run build` emits production bundle (`build/` directory).
-- Frontend is deployed to Vercel (refer to last deployment instructions/README for specifics).
+```bash
+npm run build  # Creates production build in /build
+
+# Deploy to Vercel (recommended)
+# - Automatic deployments from Git
+# - Edge network distribution
+# - Environment variable management
+```
+
+### Deployment Notes
+
+- **Platform**: Vercel (recommended) or any static hosting
+- **Build Output**: `build/` directory
+- **Environment Variables**: Set in hosting platform dashboard
+- **CORS**: Backend must allow frontend domain
 
 ---
 
-## Shared Workflows
+## 🔗 Hedera Setup Scripts (`/hedera-setup`)
 
-### File Uploads
+Standalone TypeScript utilities for Hedera (DAG-based ledger) administration. **Not used by the React app at runtime** - these are for initial setup and testing.
 
-1. Frontend sends `multipart/form-data` to `POST /api/v1/files/upload` or `/files/upload-multiple`.
-2. Backend uploads to Pinata/IPFS and returns canonical `gatewayUrl` / `ipfsUrl` plus CID.
-3. Frontend injects returned URLs into `images`/`documents` fields when minting or updating assets.
+### Purpose
 
-### Mint ➔ Portfolio Lifecycle
+- Create Hedera accounts, topics, and token collections
+- Mint NFTs directly to the Hedera ledger
+- Test transfers and IPFS uploads
+- Manage KYC/verification NFTs
+- Batch ledger operations
 
-- Immediately after mint, frontend caches the response so the asset appears under **My Assets**.
-- Background jobs ingest Hedera mirror node events to sync holdings in the database.
+### Usage
 
-### Marketplace Lifecycle
-
-1. Seller lists NFTs: `POST /api/v1/marketplace/list`.
-2. Listings appear via `GET /api/v1/marketplace/listings` (filters supported).
-3. Buyers interact through offers (`/offers`) or instant purchases (`/buy`).
-
----
-
-## Troubleshooting & Tips
-
-- **Hedera Insufficient Balance:** Ensure `OPERATOR_ID` / `TREASURY_ACCOUNT_ID` have HBAR on the configured network.
-- **HashConnect “Invalid encrypted text”:** Clear local storage and wallet pairings if you change `hashconnect` versions; stale encrypted payloads cause decryption failures.
-- **Webpack Ajv Error (`Cannot find module 'ajv/dist/compile/codegen'`):** Pin `ajv@^8` and `ajv-keywords@^5` alongside `react-scripts@5`.
-- **HTTPS Requirement:** Wallet connections demand HTTPS even locally (the `start` script sets `HTTPS=true`).
-- **Logging:** Backend logs include Hedera transaction IDs, IPFS upload CIDs, and detailed error codes—monitor them during integration.
+```bash
+cd hedera-setup
+npm install
+npm run setup:accounts     # Create accounts
+npm run setup:collections  # Create NFT collections
+npm run setup:mint         # Mint test NFTs
+npm run test:connection    # Test Hedera connection
+npm run upload:ipfs        # Test IPFS upload
+# See package.json for all scripts
+```
 
 ---
 
-## Additional References
+## 🔄 Application Workflows
 
-- `backend/README.md` – in-depth backend setup, Docker usage, deployment notes.
-- `app-react-version/README.md` – frontend-specific instructions and workflow tips.
-- `DOCKER-SETUP.md`, `DEPLOY-README.md`, `RENDER-DEPLOYMENT-GUIDE.md` – operational docs.
-- `ENV-SETUP-SUMMARY.md` – consolidated environment variable checklist.
+### 1. Wallet Connection Flow
 
-Happy building! ✨
+```
+User clicks "Connect Wallet"
+  ↓
+HashConnect generates pairing code
+  ↓
+User scans QR code with HashPack/Blade wallet
+  ↓
+Wallet pairs and returns account ID
+  ↓
+Frontend stores pairing data locally
+  ↓
+User is authenticated and can transact
+```
+
+### 2. Asset Tokenization Flow
+
+```
+User fills out property details
+  ↓
+Upload images/documents to IPFS (via backend)
+  ↓
+Backend returns IPFS URLs
+  ↓
+Frontend sends mint request with metadata
+  ↓
+Backend creates Hedera token collection
+  ↓
+Backend mints NFTs to user's account
+  ↓
+Property appears in "My Assets"
+```
+
+### 3. Marketplace Listing Flow
+
+```
+User selects NFT from "My Assets"
+  ↓
+Clicks "List for Sale"
+  ↓
+Fills out listing form (price, quantity, duration)
+  ↓
+Backend creates marketplace listing
+  ↓
+Listing appears in marketplace
+  ↓
+Other users can purchase
+```
+
+### 4. Purchase Flow
+
+```
+Buyer browses marketplace
+  ↓
+Clicks "Buy" on listing
+  ↓
+Fills out purchase form (quantity, payment method)
+  ↓
+Backend processes Hedera transfer
+  ↓
+NFTs transferred to buyer's account
+  ↓
+Listing quantity updated
+  ↓
+Assets appear in buyer's "My Assets"
+```
+
+---
+
+## 🛡️ Error Handling
+
+### Frontend
+
+- **Global Error Boundary**: Catches React component errors
+- **API Error Handling**: Centralized error processing
+- **User Notifications**: Toast notifications for all errors
+- **Graceful Degradation**: App continues working despite errors
+
+### Backend
+
+- **Structured Error Codes**: Consistent error format
+  ```json
+  {
+    "success": false,
+    "error": {
+      "code": "OWNERSHIP_ERROR",
+      "message": "Seller does not own serial numbers: 1, 2, 3"
+    }
+  }
+  ```
+- **Validation**: Request validation with clear error messages
+- **Transaction Error Handling**: Hedera-specific error handling
+- **Logging**: Comprehensive error logging for debugging
+
+---
+
+## 🔐 Security Features
+
+### Backend
+
+- **CORS Protection**: Whitelisted frontend domains only
+- **Input Validation**: All requests validated
+- **SQL Injection Prevention**: Parameterized queries
+- **Private Key Security**: Environment variables only
+- **Rate Limiting**: API rate limits (recommended for production)
+
+### Frontend
+
+- **HTTPS Only**: Required for wallet connections
+- **Local Storage**: Secure pairing data storage
+- **No Private Keys**: Never stores private keys
+- **CORS Compliance**: Respects backend CORS policies
+
+---
+
+## 📊 Data Flow
+
+```
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│   Frontend  │ ←─API──→│   Backend    │ ←─SDK──→│   Hedera    │
+│   (React)   │         │  (Express)   │         │ DAG-based ledger  │
+└─────────────┘         └──────────────┘         └─────────────┘
+       │                       │
+       │                       ↓
+       │                ┌──────────────┐
+       │                │  PostgreSQL  │
+       │                │   Database   │
+       │                └──────────────┘
+       │                       │
+       └───────────────────────┼─────────────────────────→
+                               ↓
+                        ┌──────────────┐
+                        │ IPFS/Pinata  │
+                        │   Storage    │
+                        └──────────────┘
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js v18+
+- PostgreSQL 14+
+- Hedera testnet account (create at portal.hedera.com)
+- Pinata account (for IPFS storage)
+- HashPack or Blade wallet (for users)
+
+### Quick Start
+
+1. **Clone Repository**
+
+   ```bash
+   git clone <repository-url>
+   cd deralinks
+   ```
+
+2. **Setup Backend**
+
+   ```bash
+   cd backend
+   npm install
+   cp .env.example .env
+   # Edit .env with your credentials
+   npm run dev
+   ```
+
+3. **Setup Frontend**
+
+   ```bash
+   cd app-react-version
+   npm install
+   npm start
+   ```
+
+4. **Access Application**
+   - Frontend: https://localhost:3000
+   - Backend: http://localhost:3600
+
+---
+
+## 🧪 Testing
+
+### Backend Testing
+
+```bash
+cd backend
+npm test  # Run test suite
+```
+
+### Frontend Testing
+
+```bash
+cd app-react-version
+npm test  # Run React tests
+```
+
+### Manual Testing Checklist
+
+- [ ] Wallet connection (HashPack/Blade)
+- [ ] Property minting with image upload
+- [ ] View minted properties in "My Assets"
+- [ ] List property for sale
+- [ ] Browse marketplace listings
+- [ ] Purchase property token
+- [ ] View purchased tokens in "My Assets"
+- [ ] Error handling (network errors, CORS, etc.)
+
+---
+
+## 📚 Documentation
+
+### Backend
+
+- `backend/README.md` - Backend setup & deployment
+- `backend/API-DOCUMENTATION.md` - Complete API reference
+- `backend/API-SCHEMAS.md` - Request/response schemas
+- `backend/DEPLOY-README.md` - Deployment guide
+- `backend/ENV-SETUP-SUMMARY.md` - Environment variables
+
+### Frontend
+
+- `app-react-version/README.md` - Frontend setup & usage
+
+### Hedera Setup
+
+- `hedera-setup/COMPLETE-NFT-GUIDE.md` - NFT setup guide
+- `hedera-setup/NFT-BASED-KYC-MODEL.md` - KYC NFT implementation
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Issue**: HashConnect wallet connection fails
+
+- **Solution**: Ensure HTTPS is enabled, clear browser localStorage, remove old pairings from wallet
+
+**Issue**: Images not displaying on NFT cards
+
+- **Solution**: Verify IPFS URLs are accessible, check PINATA_GATEWAY_URL in backend
+
+**Issue**: "Missing required fields" error when listing/buying
+
+- **Solution**: Ensure frontend and backend parameter names match (ownerAccount, sellerAccount)
+
+**Issue**: CORS errors
+
+- **Solution**: Add frontend domain to backend FRONTEND_URL environment variable
+
+**Issue**: Database connection fails
+
+- **Solution**: Verify DATABASE_URL format and PostgreSQL is running
+
+**Issue**: Hedera transaction errors
+
+- **Solution**: Ensure OPERATOR_ID has sufficient HBAR balance on testnet
+
+---
+
+## 🤝 Contributing
+
+1. Create feature branch from `main`
+2. Make changes with clear commit messages
+3. Test thoroughly (wallet connection, minting, marketplace)
+4. Submit pull request with description
+
+---
+
+## 📄 License
+
+[Your License Here]
+
+---
+
+## 🆘 Support
+
+For issues and questions:
+
+- Check API documentation
+- Review error logs (frontend console & backend logs)
+- Test with production build locally
+- Verify environment variables are set correctly
+
+---
+
+## 🎯 Production Deployment Checklist
+
+### Backend
+
+- [ ] Set all environment variables
+- [ ] Database migrations run
+- [ ] CORS configured for frontend domain
+- [ ] Hedera accounts funded
+- [ ] Pinata JWT configured
+- [ ] Error logging enabled
+
+### Frontend
+
+- [ ] Environment variables set in hosting platform
+- [ ] Backend API URL configured
+- [ ] Production build tested locally
+- [ ] Wallet connection tested on deployed URL
+- [ ] All routes tested (direct navigation + refresh)
+- [ ] Error boundaries working
+
+---
+
+**Built with ❤️ using Hedera, React, and Node.js**
+
+---
+
+## � Demo & Resources
+
+- **Live App (Deployed)**: https://deralinks.vercel.app/
+- **Presentation (Loom)**: https://www.loom.com/share/1243fbce321f422694c144851be32053
+- **Social (X)**: https://x.com/DeralinksA81789
+- **Certificate**: https://drive.google.com/file/d/1xf_nrOFrc7p_6p6Bcujpt5DWTDU2_9Mj/view?usp=drive_link
+- **GitHub Repository**: https://github.com/Kingscliq/deralinks
+- **Hedera Account ID (testnet)**: `0.0.3778695`
+
+> Security notice: the project's private keys MUST NOT be committed to source control or included in README files. The private key you provided has been intentionally omitted from this file. Store private keys in a secure secret manager or in a local `.env` file that's excluded from git (see `backend/.env.example` and `backend/ENV-SETUP-SUMMARY.md`). Example environment variable:
+
+```
+# backend/.env
+OPERATOR_ID=0.0.3778695
+OPERATOR_KEY=302...   # set this locally or in your secret manager
+```
+
+If you need guidance for secure secret storage, ask and I can suggest best practices (Vault, environment variables, platform secrets on Vercel/Render/etc.).
+
+## �📞 Contact & Links
+
+- **Hedera**: [portal.hedera.com](https://portal.hedera.com)
+- **HashConnect**: [docs.hashconnect.hashpack.app](https://docs.hashconnect.hashpack.app)
+- **Pinata**: [pinata.cloud](https://pinata.cloud)
+
+---
+
+_Last Updated: October 31, 2025_
